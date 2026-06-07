@@ -9,6 +9,29 @@ PyQGIS da terminale o in automazione (CI), senza aprire il desktop.
 
 ---
 
+## Avvio rapido (script automatico)
+
+Per chi vuole configurarsi l'ambiente con **un solo comando** (lo script è
+idempotente: non reinstalla nulla se è già presente):
+
+```bash
+git clone https://github.com/pigreco/qgis_headless_wsl2.git
+cd qgis_headless_wsl2
+bash setup.sh            # installa micromamba (se manca) + l'ambiente 'qgis'
+# oppure, per attivare 'micromamba activate' in ogni terminale:
+bash setup.sh --init
+```
+
+Al termine verifica con:
+
+```bash
+QT_QPA_PLATFORM=offscreen ~/.local/bin/micromamba run -n qgis qgis_process --version
+```
+
+Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
+
+---
+
 ## Prerequisiti
 
 - **WSL2** già attivo con una distro Linux (es. Ubuntu). Verifica da Windows:
