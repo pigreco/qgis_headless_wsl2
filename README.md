@@ -32,6 +32,23 @@ Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
 
 ---
 
+## Contenuto del repo
+
+- `setup.sh` — installazione one-shot idempotente.
+- `examples/` — smoke test: dataset minimo + `hello_qgis.py` per verificare
+  subito che l'ambiente funzioni. Vedi [examples/README.md](examples/README.md).
+- `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
+  algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
+  [skill/README.md](skill/README.md).
+
+Verifica veloce dopo l'installazione:
+
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
+```
+
+---
+
 ## Prerequisiti
 
 - **WSL2** già attivo con una distro Linux (es. Ubuntu). Verifica da Windows:
