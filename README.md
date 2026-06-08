@@ -1,15 +1,16 @@
-# Configurare QGIS headless in WSL2 (via micromamba)
+# QGIS headless via micromamba (WSL2 + Windows)
 
-Guida passo-passo per installare e usare **QGIS senza interfaccia grafica** in
-WSL2 (Linux su Windows), per eseguire/testare algoritmi QGIS Processing e codice
-PyQGIS da terminale o in automazione (CI), senza aprire il desktop.
+Guida passo-passo per installare e usare **QGIS senza interfaccia grafica** —
+in WSL2 (Linux su Windows) o su Windows nativo (PowerShell) — per eseguire e
+testare algoritmi QGIS Processing e codice PyQGIS da terminale o in automazione
+(CI), senza aprire il desktop.
 
 > "Headless" = nessuna finestra. Per Qt serve un *platform plugin* offscreen:
-> `export QT_QPA_PLATFORM=offscreen`.
+> `export QT_QPA_PLATFORM=offscreen` (Linux) / `$env:QT_QPA_PLATFORM = "offscreen"` (Windows).
 
 ---
 
-## Avvio rapido (script automatico)
+## Avvio rapido — WSL2 (script automatico)
 
 Per chi vuole configurarsi l'ambiente con **un solo comando** (lo script è
 idempotente: non reinstalla nulla se è già presente):
@@ -32,11 +33,71 @@ Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
 
 ---
 
+## Avvio rapido — Windows nativo (senza WSL2)
+
+Per chi vuole girare tutto in **PowerShell nativo** (niente WSL2), usa `setup.ps1`:
+
+```powershell
+cd C:\tools\qgis_headless
+.\setup.ps1              # installa micromamba + ambiente 'qgis'
+# oppure, per aggiungere micromamba al PATH utente:
+.\setup.ps1 -AddToPath
+```
+
+Al termine verifica con:
+
+```powershell
+$env:QT_QPA_PLATFORM = "offscreen"
+& "$env:LOCALAPPDATA\micromamba\micromamba.exe" run -n qgis qgis_process --version
+```
+
+Smoke test, ispezione progetti e runner algoritmico con wrapper PowerShell dedicati:
+
+```powershell
+# smoke test
+.\examples\hello_qgis_win.ps1
+
+# ispeziona un progetto QGIS
+.\examples\inspect_project_win.ps1 -Project C:\lavoro\progetto.qgs
+
+# algoritmo personalizzato
+.\skill\qgis-headless\scripts\run_algorithm_win.ps1 `
+    -Alg C:\path\to\algorithm.py `
+    -Params '{"INPUT":"C:\\in.gpkg","OUTPUT":"memory:"}'
+```
+
+> I wrapper impostano `QT_QPA_PLATFORM=offscreen` automaticamente.
+> Il prefix QGIS (`$CONDA_PREFIX\Library` su conda-forge Windows) è
+> **auto-rilevato** dagli script Python: nessuna configurazione manuale.
+> Gli stessi script Python funzionano invariati anche in WSL2/Linux.
+
+### Variabili d'ambiente consigliate (opzionale)
+
+Per non dover ripetere il path di micromamba ad ogni sessione, puoi aggiungere
+queste variabili al profilo utente Windows (Impostazioni di sistema → Variabili
+d'ambiente, oppure da PowerShell con `[Environment]::SetEnvironmentVariable`):
+
+| Variabile | Valore consigliato | Scopo |
+|---|---|---|
+| `MAMBA_ROOT_PREFIX` | `%USERPROFILE%\micromamba` | Root degli ambienti micromamba |
+| `QT_QPA_PLATFORM` | `offscreen` | Evita di doverlo impostare ogni volta |
+
+In alternativa aggiungili al tuo profilo PowerShell (`$PROFILE`):
+
+```powershell
+$env:MAMBA_ROOT_PREFIX  = "$env:USERPROFILE\micromamba"
+$env:QT_QPA_PLATFORM    = "offscreen"
+```
+
+---
+
 ## Contenuto del repo
 
-- `setup.sh` — installazione one-shot idempotente.
-- `examples/` — smoke test: dataset minimo + `hello_qgis.py` per verificare
-  subito che l'ambiente funzioni. Vedi [examples/README.md](examples/README.md).
+- `setup.sh` — installazione one-shot idempotente (WSL2/Linux).
+- `setup.ps1` — installazione one-shot idempotente (Windows nativo, PowerShell).
+- `examples/` — smoke test e utility headless. Vedi [examples/README.md](examples/README.md):
+  - `hello_qgis.py` / `hello_qgis_win.ps1` — verifica l'ambiente.
+  - `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto `.qgs`/`.qgz`.
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
   algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
   [skill/README.md](skill/README.md).
@@ -44,7 +105,13 @@ Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
 Verifica veloce dopo l'installazione:
 
 ```bash
+# WSL2/Linux
 QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
+```
+
+```powershell
+# Windows
+.\examples\hello_qgis_win.ps1
 ```
 
 ---

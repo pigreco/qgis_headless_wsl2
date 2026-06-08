@@ -20,11 +20,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_INPUT = os.path.join(HERE, "data", "sample.geojson")
 
 
+def _default_prefix():
+    prefix = os.environ.get("CONDA_PREFIX", "")
+    if prefix:
+        lib = os.path.join(prefix, "Library")
+        if os.path.isdir(lib):
+            return lib
+    return prefix
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default=DEFAULT_INPUT, help="layer vettoriale da leggere")
-    ap.add_argument("--prefix", default=os.environ.get("CONDA_PREFIX", ""),
-                    help="prefix QGIS (default: $CONDA_PREFIX)")
+    ap.add_argument("--prefix", default=_default_prefix(),
+                    help="prefix QGIS (default: $CONDA_PREFIX, con auto-detect Library su Windows)")
     args = ap.parse_args()
 
     # Inizializza QGIS senza interfaccia.
