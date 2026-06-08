@@ -1,30 +1,59 @@
 # Esempi
 
-Smoke test per verificare che l'ambiente QGIS headless funzioni.
+Smoke test e utility headless per verificare che l'ambiente QGIS funzioni.
 
 ## Dati
 
 - `data/sample.geojson` — 3 piccoli poligoni (EPSG:4326), nessuna dipendenza esterna.
 
-## 1. PyQGIS minimale
+---
 
-Carica un layer e ne stampa informazioni di base:
+## 1. Smoke test PyQGIS (`hello_qgis.py`)
 
+Carica un layer e ne stampa informazioni di base.
+
+**WSL2/Linux:**
 ```bash
 QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
+```
+
+**Windows (PowerShell):**
+```powershell
+.\examples\hello_qgis_win.ps1
+# oppure su un tuo layer:
+.\examples\hello_qgis_win.ps1 -InputPath C:\dati\mio_layer.gpkg
 ```
 
 Output atteso: `Feature : 3`, CRS `EPSG:4326`, i campi `id`/`nome` e
 `OK: l'ambiente QGIS headless funziona.`
 
-Su un tuo layer:
-
+Su un tuo layer (WSL2/Linux):
 ```bash
 QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
   python examples/hello_qgis.py --input /percorso/layer.shp
 ```
 
-## 2. Algoritmo nativo via qgis_process
+---
+
+## 2. Ispezione progetto QGIS (`inspect_project.py`)
+
+Stampa metadati del progetto e informazioni su tutti i layer (tipo, CRS,
+geometria, campi, feature count).
+
+**WSL2/Linux:**
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/inspect_project.py --project /percorso/progetto.qgs
+```
+
+**Windows (PowerShell):**
+```powershell
+.\examples\inspect_project_win.ps1 -Project C:\lavoro\progetto.qgs
+```
+
+---
+
+## 3. Algoritmo nativo via `qgis_process`
 
 Esempio: riproietta i poligoni in EPSG:32633 (UTM 33N) scrivendo un GeoPackage.
 

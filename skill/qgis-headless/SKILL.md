@@ -1,6 +1,6 @@
 ---
 name: qgis-headless
-description: Run or test QGIS Processing algorithms and PyQGIS code headless (no GUI) in WSL/Linux via a conda-forge QGIS environment (micromamba). Use when asked to run/test a QGIS Processing algorithm or script, run qgis_process, execute PyQGIS without opening the desktop, or validate a single-file QgsProcessingAlgorithm. Prefer this over the QGIS MCP server when the desktop need not be involved.
+description: Run or test QGIS Processing algorithms and PyQGIS code headless (no GUI) on WSL/Linux or Windows via a conda-forge QGIS environment (micromamba). Use when asked to run/test a QGIS Processing algorithm or script, run qgis_process, execute PyQGIS without opening the desktop, or validate a single-file QgsProcessingAlgorithm. Prefer this over the QGIS MCP server when the desktop need not be involved.
 ---
 
 # QGIS Headless Runner
@@ -20,17 +20,59 @@ autonomous path for testing — no running QGIS Desktop, no MCP "Start Server".
 For a full, narrated setup guide (Italian), see the repository README:
 https://github.com/pigreco/qgis_headless_wsl2#readme
 
+## WSL2/Linux vs Windows
+
+The setup differs by platform; the Python scripts (`run_algorithm.py`,
+`hello_qgis.py`, `inspect_project.py`) work on both — the QGIS prefix path is
+auto-detected at runtime (`$CONDA_PREFIX\Library` on conda-forge Windows,
+`$CONDA_PREFIX` on Linux).
+
+| | WSL2 / Linux | Windows nativo |
+|---|---|---|
+| Setup script | `bash setup.sh` | `.\setup.ps1` |
+| micromamba binary | `~/.local/bin/micromamba` | `$env:LOCALAPPDATA\micromamba\micromamba.exe` |
+| Env prefix | `~/micromamba` | `$env:USERPROFILE\micromamba` |
+| QGIS prefix | `$CONDA_PREFIX` | `$CONDA_PREFIX\Library` (auto) |
+| Shell env var | `export QT_QPA_PLATFORM=offscreen` | `$env:QT_QPA_PLATFORM = "offscreen"` |
+
+**Windows invocation example (use the PowerShell wrappers):**
+```powershell
+# smoke test
+.\examples\hello_qgis_win.ps1
+
+# inspect a QGIS project
+.\examples\inspect_project_win.ps1 -Project C:\path\to\project.qgs
+
+# custom algorithm
+.\skill\qgis-headless\scripts\run_algorithm_win.ps1 `
+    -Alg C:\path\to\algorithm.py `
+    -Params '{"INPUT":"C:\\path\\to\\input.gpkg","OUTPUT":"memory:"}'
+```
+The wrappers set `QT_QPA_PLATFORM=offscreen` automatically; no manual
+configuration needed.
+
+---
+
 ## Step 0 — Verify (or create) the environment
 
 The env is user-level (in `$HOME`), so it works from any folder/workspace.
 
+**WSL2/Linux:**
 ```bash
 micromamba env list 2>/dev/null | grep -q qgis && echo "qgis env present" || echo "missing"
 ```
 
-If `micromamba` is not on PATH, the binary may be at `~/.local/bin/micromamba`.
+**Windows (PowerShell):**
+```powershell
+& "$env:LOCALAPPDATA\micromamba\micromamba.exe" env list | Select-String "qgis"
+```
+
+If `micromamba` is not on PATH, the binary may be at `~/.local/bin/micromamba`
+(Linux) or `$env:LOCALAPPDATA\micromamba\micromamba.exe` (Windows).
+
 If the env is **missing**, create it (downloads ~3–5 GB, takes a few minutes):
 
+**WSL2/Linux:**
 ```bash
 # install micromamba if needed
 mkdir -p ~/.local/bin && curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
@@ -39,6 +81,11 @@ mkdir -p ~/.local/bin && curl -Ls https://micro.mamba.pm/api/micromamba/linux-64
 export MAMBA_ROOT_PREFIX="$HOME/micromamba"
 ~/.local/bin/micromamba create -n qgis -c conda-forge qgis -y
 ~/.local/bin/micromamba clean -a -y
+```
+
+**Windows (PowerShell):**
+```powershell
+.\setup.ps1    # installs micromamba + qgis env; idempotent
 ```
 
 Always confirm before a multi-GB install if the user has not already asked for it.

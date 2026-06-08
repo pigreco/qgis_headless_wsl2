@@ -90,6 +90,15 @@ def resolve_params(raw):
     return resolved
 
 
+def _default_prefix():
+    prefix = os.environ.get("CONDA_PREFIX", "")
+    if prefix:
+        lib = os.path.join(prefix, "Library")
+        if os.path.isdir(lib):
+            return lib
+    return prefix
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--alg", required=True, help="path to the algorithm .py")
@@ -97,8 +106,8 @@ def main():
                     help="JSON dict of parameters (or @file.json)")
     ap.add_argument("--class", dest="class_name", default=None,
                     help="algorithm class name (if the module has several)")
-    ap.add_argument("--prefix", default=os.environ.get("CONDA_PREFIX", ""),
-                    help="QGIS prefix path (default: $CONDA_PREFIX)")
+    ap.add_argument("--prefix", default=_default_prefix(),
+                    help="QGIS prefix path (default: $CONDA_PREFIX, Library auto-detected on Windows)")
     ap.add_argument("--set", action="append", default=[], metavar="MOD.ATTR=VAL",
                     help="override a module attribute before running, e.g. "
                          "--set PAUSE_SECONDS=0 (value parsed as JSON, then str)")
