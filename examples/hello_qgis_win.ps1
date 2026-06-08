@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Smoke test di PyQGIS headless su Windows (wrapper di hello_qgis.py).
-    Imposta automaticamente QT_QPA_PLATFORM; il prefix QGIS viene auto-rilevato
-    dallo script Python ($CONDA_PREFIX\Library su conda-forge Windows).
+    PyQGIS headless smoke test on Windows (wrapper for hello_qgis.py).
+    Sets QT_QPA_PLATFORM automatically; the QGIS prefix is auto-detected
+    by the Python script ($CONDA_PREFIX\Library on conda-forge Windows).
 .PARAMETER InputPath
-    Layer vettoriale da leggere (default: examples\data\sample.geojson).
+    Vector layer to read (default: examples\data\sample.geojson).
 .PARAMETER MambaExe
-    Percorso di micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
+    Path to micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
 .EXAMPLE
     .\examples\hello_qgis_win.ps1
-    .\examples\hello_qgis_win.ps1 -InputPath C:\dati\mio_layer.gpkg
+    .\examples\hello_qgis_win.ps1 -InputPath C:\data\my_layer.gpkg
 #>
 param(
     [string]$InputPath = "",
@@ -22,7 +22,7 @@ $ErrorActionPreference = "Stop"
 $SCRIPT = Join-Path $PSScriptRoot "hello_qgis.py"
 
 if (-not (Test-Path $MambaExe)) {
-    Write-Error "micromamba non trovato: $MambaExe`nEsegui prima .\setup.ps1"
+    Write-Error "micromamba not found: $MambaExe`nRun .\setup.ps1 first."
     exit 1
 }
 
@@ -32,11 +32,10 @@ if (-not $env:MAMBA_ROOT_PREFIX) { $env:MAMBA_ROOT_PREFIX = "$env:USERPROFILE\mi
 $extra = @()
 if ($InputPath) { $extra += @("--input", $InputPath) }
 
-# ErrorActionPreference = Stop farebbe esplodere il crash Qt all'uscita (noto
-# su conda-forge Windows: exitQgis() genera un access violation che non impatta
-# il processing). Lo gestiamo esplicitamente.
+# ErrorActionPreference = Stop would surface the known Qt crash on exit (conda-forge
+# Windows: exitQgis() triggers an access violation that does not affect processing).
 $ErrorActionPreference = "Continue"
 & $MambaExe run -n qgis python -u $SCRIPT @extra
-# 0xC0000005 = STATUS_ACCESS_VIOLATION: crash noto di Qt exitQgis() su conda-forge Windows.
+# 0xC0000005 = STATUS_ACCESS_VIOLATION: known Qt exitQgis() crash on conda-forge Windows.
 if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
 exit 0

@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Ispeziona un progetto QGIS (.qgs / .qgz) headless su Windows.
-    Stampa titolo, CRS, lista layer con tipo, geometria, campi, feature count.
-    Wrapper di inspect_project.py: imposta QT_QPA_PLATFORM; il prefix QGIS viene
-    auto-rilevato dallo script Python ($CONDA_PREFIX\Library su conda-forge Windows).
+    Inspect a QGIS project (.qgs / .qgz) headless on Windows.
+    Prints title, CRS, and per-layer info: type, geometry, fields, feature count.
+    Wrapper for inspect_project.py: sets QT_QPA_PLATFORM; the QGIS prefix is
+    auto-detected by the Python script ($CONDA_PREFIX\Library on conda-forge Windows).
 .PARAMETER Project
-    Percorso al file .qgs o .qgz (obbligatorio).
+    Path to the .qgs or .qgz file (required).
 .PARAMETER MambaExe
-    Percorso a micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
+    Path to micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
 .EXAMPLE
-    .\examples\inspect_project_win.ps1 -Project C:\lavoro\progetto.qgs
+    .\examples\inspect_project_win.ps1 -Project C:\work\project.qgs
 #>
 param(
     [Parameter(Mandatory)][string]$Project,
@@ -22,11 +22,11 @@ $ErrorActionPreference = "Stop"
 $SCRIPT = Join-Path $PSScriptRoot "inspect_project.py"
 
 if (-not (Test-Path $MambaExe)) {
-    Write-Error "micromamba non trovato: $MambaExe`nEsegui prima .\setup.ps1"
+    Write-Error "micromamba not found: $MambaExe`nRun .\setup.ps1 first."
     exit 1
 }
 if (-not (Test-Path $Project)) {
-    Write-Error "File progetto non trovato: $Project"
+    Write-Error "Project file not found: $Project"
     exit 1
 }
 
@@ -35,6 +35,6 @@ if (-not $env:MAMBA_ROOT_PREFIX) { $env:MAMBA_ROOT_PREFIX = "$env:USERPROFILE\mi
 
 $ErrorActionPreference = "Continue"
 & $MambaExe run -n qgis python -u $SCRIPT --project $Project
-# 0xC0000005 = crash noto di exitQgis() su conda-forge Windows, non e' un errore reale
+# 0xC0000005 = known Qt exitQgis() crash on conda-forge Windows, not a real error
 if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
 exit 0

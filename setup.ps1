@@ -1,11 +1,11 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Installa QGIS headless su Windows via micromamba (conda-forge).
-    Idempotente: non reinstalla nulla se gia' presente.
+    Install QGIS headless on Windows via micromamba (conda-forge).
+    Idempotent: skips any step that is already done.
 .EXAMPLE
-    .\setup.ps1               # installa micromamba + ambiente 'qgis'
-    .\setup.ps1 -AddToPath    # come sopra, aggiunge micromamba al PATH utente
+    .\setup.ps1               # install micromamba + 'qgis' environment
+    .\setup.ps1 -AddToPath    # same, and add micromamba to the user PATH
 #>
 [CmdletBinding()]
 param(
@@ -28,12 +28,12 @@ function Say { param([string]$msg) Write-Host "`n==> $msg" -ForegroundColor Blue
 $mambaCmd = Get-Command micromamba -ErrorAction SilentlyContinue
 if ($mambaCmd) {
     $MAMBA = $mambaCmd.Source
-    Say "micromamba gia' presente: $MAMBA"
+    Say "micromamba already present: $MAMBA"
 } elseif (Test-Path $MAMBA_EXE) {
     $MAMBA = $MAMBA_EXE
-    Say "micromamba gia' presente: $MAMBA"
+    Say "micromamba already present: $MAMBA"
 } else {
-    Say "Installo micromamba in $MAMBA_DIR ..."
+    Say "Installing micromamba in $MAMBA_DIR ..."
     New-Item -ItemType Directory -Force $MAMBA_DIR | Out-Null
     $tmpArchive = "$env:TEMP\micromamba.tar.bz2"
     $tmpExtract = "$env:TEMP\micromamba_extract"
@@ -48,37 +48,37 @@ if ($mambaCmd) {
 }
 & $MAMBA --version
 
-# 2. PATH (opzionale) ---------------------------------------------------------
+# 2. PATH (optional) ----------------------------------------------------------
 if ($AddToPath) {
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
     if ($userPath -notlike "*$MAMBA_DIR*") {
-        Say "Aggiungo $MAMBA_DIR al PATH utente ..."
+        Say "Adding $MAMBA_DIR to user PATH ..."
         [Environment]::SetEnvironmentVariable("Path", "$userPath;$MAMBA_DIR", "User")
         $env:PATH += ";$MAMBA_DIR"
-        Write-Host "   Riapri il terminale per usare 'micromamba' direttamente."
+        Write-Host "   Reopen the terminal to use 'micromamba' directly."
     }
 }
 
-# 3. ambiente qgis -------------------------------------------------------------
+# 3. qgis environment ---------------------------------------------------------
 if (Test-Path "$env:MAMBA_ROOT_PREFIX\envs\$ENV_NAME") {
-    Say "Ambiente '$ENV_NAME' gia' esistente: nessuna installazione."
+    Say "Environment '$ENV_NAME' already exists: nothing to install."
 } else {
-    Say "Creo '$ENV_NAME' da conda-forge (~3-5 GB, qualche minuto) ..."
+    Say "Creating '$ENV_NAME' from conda-forge (~3-5 GB, a few minutes) ..."
     & $MAMBA create -n $ENV_NAME -c conda-forge qgis -y
-    Say "Pulisco la cache dei pacchetti ..."
+    Say "Cleaning package cache ..."
     & $MAMBA clean -a -y
 }
 
-# 4. verifica ------------------------------------------------------------------
-Say "Verifica:"
+# 4. verify -------------------------------------------------------------------
+Say "Verifying:"
 $env:QT_QPA_PLATFORM = "offscreen"
 $ErrorActionPreference = "Continue"
 & $MAMBA run -n $ENV_NAME python -u (Join-Path $PSScriptRoot "examples\hello_qgis.py")
-# 0xC0000005 = crash noto di Qt exitQgis() su conda-forge Windows, non e' un errore reale
+# 0xC0000005 = known Qt exitQgis() crash on conda-forge Windows, not a real error
 if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
 $ErrorActionPreference = "Stop"
 
-Say "Fatto. Esempi d'uso:"
+Say "Done. Usage examples:"
 Write-Host @"
 
   `$env:QT_QPA_PLATFORM = 'offscreen'

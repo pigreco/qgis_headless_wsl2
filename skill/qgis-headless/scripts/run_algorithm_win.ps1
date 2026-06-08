@@ -1,20 +1,20 @@
 <#
 .SYNOPSIS
-    Runner headless per un singolo QgsProcessingAlgorithm su Windows.
-    Wrapper di run_algorithm.py: imposta QT_QPA_PLATFORM; il prefix QGIS viene
-    auto-rilevato dallo script Python ($CONDA_PREFIX\Library su conda-forge Windows).
+    Headless runner for a single QgsProcessingAlgorithm on Windows.
+    Wrapper for run_algorithm.py: sets QT_QPA_PLATFORM; the QGIS prefix is
+    auto-detected by the Python script ($CONDA_PREFIX\Library on conda-forge Windows).
 .PARAMETER Alg
-    Percorso assoluto al file .py dell'algoritmo (obbligatorio).
+    Absolute path to the algorithm .py file (required).
 .PARAMETER Params
-    JSON dei parametri, es. '{"INPUT":"C:\\in.gpkg","OUTPUT":"memory:"}' (default: {}).
-    Usa @C:\file.json per caricare da file.
+    JSON parameter dict, e.g. '{"INPUT":"C:\\in.gpkg","OUTPUT":"memory:"}' (default: {}).
+    Use @C:\file.json to load from a file.
 .PARAMETER ClassName
-    Nome della classe da usare se il modulo ne definisce piu' di una.
+    Class name to use if the module defines more than one algorithm.
 .PARAMETER Set
-    Override di attributi del modulo prima dell'esecuzione, es. PAUSE_SECONDS=0.
-    Ripeti il flag per override multipli.
+    Override a module attribute before running, e.g. PAUSE_SECONDS=0.
+    Repeat the flag for multiple overrides.
 .PARAMETER MambaExe
-    Percorso di micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
+    Path to micromamba.exe (default: $env:LOCALAPPDATA\micromamba\micromamba.exe).
 .EXAMPLE
     .\run_algorithm_win.ps1 -Alg C:\algo\buffer.py -Params '{"INPUT":"C:\\in.gpkg","DISTANCE":50,"OUTPUT":"C:\\out.gpkg"}'
     .\run_algorithm_win.ps1 -Alg C:\algo\download.py -Set PAUSE_SECONDS=0
@@ -33,11 +33,15 @@ $ErrorActionPreference = "Stop"
 $RUNNER = Join-Path $PSScriptRoot "run_algorithm.py"
 
 if (-not (Test-Path $MambaExe)) {
-    Write-Error "micromamba non trovato: $MambaExe`nEsegui prima .\setup.ps1"
+    Write-Error "micromamba not found: $MambaExe`nRun .\setup.ps1 first."
+    exit 1
+}
+if (-not (Test-Path $RUNNER)) {
+    Write-Error "Runner not found: $RUNNER`nCheck that the repository is intact."
     exit 1
 }
 if (-not (Test-Path $Alg)) {
-    Write-Error "File algoritmo non trovato: $Alg"
+    Write-Error "Algorithm file not found: $Alg"
     exit 1
 }
 

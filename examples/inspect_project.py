@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-inspect_project.py — Ispeziona un progetto QGIS (.qgs / .qgz) in modalità headless.
-Stampa: metadati progetto, lista layer con tipo, CRS, sorgente, campi, feature count.
+inspect_project.py — Inspect a QGIS project (.qgs / .qgz) in headless mode.
+Prints: project metadata, layer list with type, CRS, source, fields, feature count.
 
-Uso (dentro l'ambiente 'qgis'):
+Usage (inside the 'qgis' environment):
     QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/inspect_project.py \
         --project /path/to/project.qgs
 """
@@ -26,10 +26,12 @@ def _default_prefix():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Ispeziona un progetto QGIS headless")
-    ap.add_argument("--project", required=True, help="Percorso al file .qgs / .qgz")
+    ap = argparse.ArgumentParser(description="Inspect a QGIS project headless")
+    ap.add_argument("--project", required=True, help="Path to the .qgs / .qgz file")
     ap.add_argument("--prefix", default=_default_prefix(),
-                    help="Prefix QGIS (default: $CONDA_PREFIX, Library auto-detected su Windows)")
+                    help="QGIS prefix (default: $CONDA_PREFIX, Library auto-detected on Windows)")
+    ap.add_argument("--no-count", action="store_true",
+                    help="Skip feature count (useful for large or remote datasets)")
     args = ap.parse_args()
 
     from qgis.core import Qgis, QgsApplication, QgsProject, QgsVectorLayer, QgsRasterLayer
@@ -40,49 +42,50 @@ def main():
     app.initQgis()
 
     try:
-        print("QGIS", Qgis.QGIS_VERSION, "inizializzato (headless)")
+        print("QGIS", Qgis.QGIS_VERSION, "initialized (headless)")
 
         project = QgsProject.instance()
         ok = project.read(args.project)
         if not ok:
-            sys.exit(f"Impossibile leggere il progetto: {args.project}")
+            sys.exit(f"Cannot read project: {args.project}")
 
         crs = project.crs()
         try:
             saved_ver = project.lastSaveVersion().text()
         except Exception:
-            saved_ver = "n/d"
+            saved_ver = "n/a"
 
         print(f"\n{'='*64}")
-        print(f"  Progetto : {os.path.basename(args.project)}")
+        print(f"  Project  : {os.path.basename(args.project)}")
         print(f"{'='*64}")
-        print(f"  Titolo       : {project.title() or '(nessun titolo)'}")
-        print(f"  CRS progetto : {crs.authid()} – {crs.description()}")
-        print(f"  Ultima salv. : QGIS {saved_ver}")
-        print(f"  File         : {project.absoluteFilePath()}")
+        print(f"  Title      : {project.title() or '(no title)'}")
+        print(f"  Project CRS: {crs.authid()} – {crs.description()}")
+        print(f"  Last saved : QGIS {saved_ver}")
+        print(f"  File       : {project.absoluteFilePath()}")
 
         layers = project.mapLayers()
-        print(f"\n  Layer totali : {len(layers)}")
+        print(f"\n  Total layers: {len(layers)}")
 
-        for i, (lid, layer) in enumerate(layers.items(), 1):
+        for i, (lid, layer) in enumerate(sorted(layers.items(), key=lambda x: x[1].name()), 1):
             ltype_int = int(layer.type())
             ltype_name = LAYER_TYPE.get(ltype_int, f"type={ltype_int}")
-            valid = "OK" if layer.isValid() else "NON VALIDO"
+            valid = "OK" if layer.isValid() else "INVALID"
             print(f"\n  {i}. [{valid}] {layer.name()}  ({ltype_name})")
-            print(f"     CRS     : {layer.crs().authid()}")
-            print(f"     Sorgente: {layer.source()}")
+            print(f"     CRS   : {layer.crs().authid()}")
+            print(f"     Source: {layer.source()}")
             if isinstance(layer, QgsVectorLayer) and layer.isValid():
                 geom_int = int(layer.geometryType())
                 geom_name = GEOM_TYPE.get(geom_int, f"geom={geom_int}")
                 fields = [f.name() for f in layer.fields()]
-                print(f"     Geometria: {geom_name}")
-                print(f"     Campi ({len(fields)}): {', '.join(fields)}")
-                print(f"     Feature  : {layer.featureCount()}")
-                print(f"     Extent   : {layer.extent().toString(4)}")
+                print(f"     Geometry: {geom_name}")
+                print(f"     Fields ({len(fields)}): {', '.join(fields)}")
+                if not args.no_count:
+                    print(f"     Features: {layer.featureCount()}")
+                print(f"     Extent  : {layer.extent().toString(4)}")
             elif isinstance(layer, QgsRasterLayer) and layer.isValid():
-                print(f"     Dimensioni: {layer.width()} × {layer.height()} px, "
-                      f"{layer.bandCount()} bande")
-                print(f"     Extent   : {layer.extent().toString(4)}")
+                print(f"     Size  : {layer.width()} × {layer.height()} px, "
+                      f"{layer.bandCount()} band(s)")
+                print(f"     Extent: {layer.extent().toString(4)}")
 
         print(f"\n{'='*64}\n")
 

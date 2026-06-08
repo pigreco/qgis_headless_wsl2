@@ -33,7 +33,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default=DEFAULT_INPUT, help="layer vettoriale da leggere")
     ap.add_argument("--prefix", default=_default_prefix(),
-                    help="prefix QGIS (default: $CONDA_PREFIX, con auto-detect Library su Windows)")
+                    help="QGIS prefix (default: $CONDA_PREFIX, Library auto-detected on Windows)")
     args = ap.parse_args()
 
     # Inizializza QGIS senza interfaccia.
