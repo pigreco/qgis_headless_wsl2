@@ -1,0 +1,16 @@
+{
+  "type": "FeatureCollection",
+  "name": "sample_points",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"id": 1, "nome": "Roma"},
+      "geometry": {"type": "Point", "coordinates": [12.4924, 41.8902]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"id": 2, "nome": "Firenze"},
+      "geometry": {"type": "Point", "coordinates": [11.2558, 43.7696]}
+    }
+  ]
+}

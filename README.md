@@ -36,7 +36,8 @@ Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
 
 - `setup.sh` — installazione one-shot idempotente.
 - `examples/` — smoke test: dataset minimo + `hello_qgis.py` per verificare
-  subito che l'ambiente funzioni. Vedi [examples/README.md](examples/README.md).
+  subito che l'ambiente funzioni, più esempi per Verto Online.
+  Vedi [examples/README.md](examples/README.md).
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
   algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
   [skill/README.md](skill/README.md).
