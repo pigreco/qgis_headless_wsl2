@@ -72,7 +72,13 @@ def _post_json(endpoint: str, body: dict, timeout: float) -> dict:
     )
     with urlopen(request, timeout=timeout) as response:
         raw = response.read().decode("utf-8")
-    return json.loads(raw)
+    # The Verto endpoint sometimes prepends a debug log line (e.g. an SQL
+    # INSERT statement) before the actual JSON body, so parse from the
+    # first '{' rather than assuming the whole body is valid JSON.
+    start = raw.find("{")
+    if start == -1:
+        raise QgsProcessingException("Verto response did not contain a JSON object")
+    return json.loads(raw[start:])
 
 
 def _convert_chunk(endpoint: str, in_epsg: int, out_epsg: int, coords: list[tuple[float, float]], timeout: float) -> list[tuple[float, float]]:

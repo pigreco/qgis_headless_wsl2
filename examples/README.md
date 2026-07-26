@@ -64,7 +64,12 @@ Esecuzione con il runner headless già presente nella skill:
 QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
   python ~/.claude/skills/qgis-headless/scripts/run_algorithm.py \
   --alg examples/verto_processing_algorithm.py \
-  --params '{"INPUT": "examples/data/sample_points.geojson", "FROM_EPSG": 4326, "TO_EPSG": 6707, "OUTPUT": "memory:"}'
+  --params '{"INPUT": "examples/data/sample_points.geojson", "FROM_EPSG": 3003, "TO_EPSG": 6707, "OUTPUT": "memory:"}'
 ```
 
-Nota: il file di esempio accetta solo sorgenti vettoriali di tipo punto.
+Nota: il file di esempio accetta solo sorgenti vettoriali di tipo punto. Il
+parametro `FROM_EPSG`/`TO_EPSG` deve essere uno dei sistemi di riferimento
+supportati da Verto Online (vedi `--request info` in `verto_online.py`); ad
+esempio EPSG:4326 (WGS84) non è supportato come sistema di input. Il file
+`data/sample_points.geojson` contiene coordinate già in EPSG:3003
+(Monte Mario / Italy zone 1).

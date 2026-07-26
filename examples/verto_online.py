@@ -56,7 +56,13 @@ def post_json(endpoint: str, body: dict, timeout: float) -> dict:
     )
     with urlopen(request, timeout=timeout) as response:
         raw = response.read().decode("utf-8")
-    return json.loads(raw)
+    # The Verto endpoint sometimes prepends a debug log line (e.g. an SQL
+    # INSERT statement) before the actual JSON body, so parse from the
+    # first '{' rather than assuming the whole body is valid JSON.
+    start = raw.find("{")
+    if start == -1:
+        raise json.JSONDecodeError("no JSON object found in response", raw, 0)
+    return json.loads(raw[start:])
 
 
 def parse_args() -> argparse.Namespace:
