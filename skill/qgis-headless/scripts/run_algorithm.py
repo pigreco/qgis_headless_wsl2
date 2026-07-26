@@ -16,11 +16,13 @@ In --params, string values that point to an existing file are loaded as vector
 layers; all other values are passed through unchanged.
 """
 import argparse
+import gc
 import importlib.util
 import inspect
 import json
 import os
 import sys
+import traceback
 
 # Make stdout line-buffered so progress survives a crash when piped.
 try:
@@ -110,11 +112,7 @@ def main():
             params_text = fh.read()
     raw_params = json.loads(params_text)
 
-    if args.prefix:
-        QgsApplication.setPrefixPath(args.prefix, True)
-    app = QgsApplication([], False)
-    app.initQgis()
-    try:
+    def run():
         mod = load_module(args.alg)
 
         for override in args.set:
@@ -142,8 +140,29 @@ def main():
                 print(f">>> {key}: {layer.featureCount()} features")
             else:
                 print(f">>> {key}: {val}")
+
+    if args.prefix:
+        QgsApplication.setPrefixPath(args.prefix, True)
+    app = QgsApplication([], False)
+    app.initQgis()
+    exit_code = 0
+    try:
+        run()
+    except Exception:
+        # Print here instead of letting the exception propagate: Python
+        # deletes the `except ... :` frame's exception and traceback when
+        # this handler exits, which is what releases run()'s locals - and
+        # every GDAL/OGR-backed layer object it created. If the exception
+        # were left to propagate past exitQgis() below, those objects would
+        # still be alive when the provider registry is torn down, and
+        # finalizing them afterwards segfaults the interpreter on exit.
+        traceback.print_exc()
+        exit_code = 1
     finally:
+        gc.collect()
         app.exitQgis()
+    if exit_code:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
