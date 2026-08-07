@@ -38,9 +38,14 @@ elif [[ -x "$MAMBA_BIN" ]]; then
   MAMBA="$MAMBA_BIN"
   say "micromamba gia' presente: $MAMBA"
 else
-  say "Installo micromamba in ~/.local/bin ..."
+  case "$(uname -m)" in
+    x86_64)  MAMBA_ARCH="linux-64" ;;
+    aarch64) MAMBA_ARCH="linux-aarch64" ;;
+    *) echo "Architettura non supportata: $(uname -m) (serve x86_64 o aarch64)" >&2; exit 1 ;;
+  esac
+  say "Installo micromamba (${MAMBA_ARCH}) in ~/.local/bin ..."
   mkdir -p "$HOME/.local/bin"
-  curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
+  curl -Ls "https://micro.mamba.pm/api/micromamba/${MAMBA_ARCH}/latest" \
     | tar -xj -C /tmp bin/micromamba
   cp /tmp/bin/micromamba "$MAMBA_BIN"
   chmod +x "$MAMBA_BIN"
