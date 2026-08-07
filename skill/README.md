@@ -18,26 +18,26 @@ qgis-headless/
     └── run_algorithm_win.ps1     # wrapper PowerShell per Windows
 ```
 
-## Installazione
+## Installazione (e aggiornamento)
 
-Le skill personali stanno in `~/.claude/skills/`. Copia la cartella:
+Un solo comando, lo stesso anche per aggiornare dopo un `git pull`:
 
 **WSL2/Linux:**
 ```bash
-mkdir -p ~/.claude/skills
-cp -r skill/qgis-headless ~/.claude/skills/
+bash install_skill.sh              # copia in ~/.claude/skills/
+bash install_skill.sh --project    # oppure in <repo>/.claude/skills/ (team)
+bash install_skill.sh --symlink    # symlink al repo: si aggiorna col pull
 ```
 
 **Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills"
-Copy-Item -Recurse skill\qgis-headless "$env:USERPROFILE\.claude\skills\"
+.\install_skill.ps1                # copia in $env:USERPROFILE\.claude\skills
+.\install_skill.ps1 -Project       # oppure in <repo>\.claude\skills (team)
 ```
 
-In alternativa, per condividerla con un team su un progetto specifico, mettila in
-`<repo>/.claude/skills/qgis-headless` (così è versionata col progetto).
-
-Riavvia/riapri Claude Code: la skill comparirà tra quelle disponibili.
+Eventuali file locali aggiunti alla skill installata (non presenti nel repo)
+vengono preservati e segnalati. Riavvia/riapri Claude Code: la skill comparirà
+tra quelle disponibili.
 
 ## Prerequisito
 

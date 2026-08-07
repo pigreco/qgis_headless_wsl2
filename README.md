@@ -111,8 +111,9 @@ $env:QT_QPA_PLATFORM    = "offscreen"
     (layer con stile QML o interi progetti): report automatici, anteprime,
     mappe in pipeline/CI.
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
-  algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
-  [skill/README.md](skill/README.md).
+  algoritmi QGIS headless, con un runner generico. Installazione/aggiornamento
+  con un comando: `bash install_skill.sh` (WSL2/Linux) o `.\install_skill.ps1`
+  (Windows). Dettagli in [skill/README.md](skill/README.md).
 - `.github/workflows/ci.yml` — CI su GitHub Actions: crea l'ambiente QGIS da zero
   su Ubuntu **e** Windows e lancia gli smoke test a ogni push/PR. È anche un
   template copiabile per chi vuole testare i propri algoritmi QGIS in CI.
