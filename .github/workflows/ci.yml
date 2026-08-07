@@ -1,0 +1,141 @@
+# CI: verifica che l'ambiente QGIS headless funzioni davvero, su Linux e
+# Windows, replicando quello che fanno setup.sh / setup.ps1 (micromamba +
+# QGIS da conda-forge) e lanciando gli smoke test del repo.
+#
+# Questo file è anche un template copiabile: chiunque voglia testare i propri
+# algoritmi QGIS in CI può partire da qui.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install micromamba + QGIS env
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: qgis
+          create-args: qgis
+          condarc: |
+            channels:
+              - conda-forge
+          cache-environment: true
+
+      - name: QGIS version
+        run: micromamba run -n qgis qgis_process --version
+
+      - name: Smoke test (hello_qgis.py)
+        run: micromamba run -n qgis python -u examples/hello_qgis.py
+
+      - name: Native algorithm via qgis_process
+        run: |
+          micromamba run -n qgis qgis_process run native:reprojectlayer -- \
+            INPUT=examples/data/sample.geojson \
+            TARGET_CRS=EPSG:32633 \
+            OUTPUT=/tmp/sample_32633.gpkg
+
+      - name: Generic runner (centroids_algorithm.py)
+        run: |
+          micromamba run -n qgis python -u skill/qgis-headless/scripts/run_algorithm.py \
+            --alg examples/centroids_algorithm.py \
+            --params '{"INPUT": "examples/data/sample.geojson", "OUTPUT": "memory:"}'
+
+      - name: Inspect a generated project (inspect_project.py)
+        run: |
+          cat > /tmp/make_project.py <<'EOF'
+          import gc
+          from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
+
+          def build():
+              project = QgsProject.instance()
+              layer = QgsVectorLayer("examples/data/sample.geojson", "sample", "ogr")
+              assert layer.isValid(), "sample layer not valid"
+              project.addMapLayer(layer)
+              project.setTitle("CI test project")
+              assert project.write("/tmp/ci_project.qgs"), "cannot write project"
+              # release GDAL/OGR layers before exitQgis() or Python segfaults on exit
+              project.clear()
+
+          app = QgsApplication([], False)
+          app.initQgis()
+          build()
+          gc.collect()
+          app.exitQgis()
+          EOF
+          micromamba run -n qgis python -u /tmp/make_project.py
+          micromamba run -n qgis python -u examples/inspect_project.py \
+            --project /tmp/ci_project.qgs
+
+  windows:
+    name: Windows (native)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      QT_QPA_PLATFORM: offscreen
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install micromamba + QGIS env
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: qgis
+          create-args: qgis
+          condarc: |
+            channels:
+              - conda-forge
+          cache-environment: true
+          init-shell: none
+
+      - name: QGIS version
+        run: micromamba run -n qgis qgis_process --version
+
+      # Sul conda-forge Windows exitQgis() può ancora crashare (0xC0000005)
+      # DOPO che lo script ha finito con successo; micromamba run rimappa
+      # quell'exit code, quindi la tolleranza controlla il marker di successo
+      # nell'output invece del codice di uscita.
+      - name: Smoke test (hello_qgis.py)
+        run: |
+          micromamba run -n qgis python -u examples\hello_qgis.py 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "OK:" -Quiet) {
+              Write-Host "Script completed; known exitQgis() crash tolerated."
+            } else { exit 1 }
+          }
+
+      - name: Native algorithm via qgis_process
+        run: |
+          micromamba run -n qgis qgis_process run native:reprojectlayer -- INPUT=examples/data/sample.geojson TARGET_CRS=EPSG:32633 OUTPUT=$env:TEMP\sample_32633.gpkg 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "OUTPUT:" -Quiet) {
+              Write-Host "qgis_process completed; known crash on exit tolerated."
+            } else { exit 1 }
+          }
+
+      - name: Generic runner (centroids_algorithm.py)
+        run: |
+          # JSON in un file (via --params @file) per evitare il quoting hell di pwsh
+          '{"INPUT": "examples/data/sample.geojson", "OUTPUT": "memory:"}' | Set-Content -Path params.json
+          micromamba run -n qgis python -u skill\qgis-headless\scripts\run_algorithm.py --alg examples\centroids_algorithm.py --params "@params.json" 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "RESULT keys:" -Quiet) {
+              Write-Host "Runner completed; known exitQgis() crash tolerated."
+            } else { exit 1 }
+          }

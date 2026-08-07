@@ -1,5 +1,7 @@
 # QGIS headless via micromamba (WSL2 + Windows)
 
+[![CI](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml/badge.svg)](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml)
+
 Guida passo-passo per installare e usare **QGIS senza interfaccia grafica** —
 in WSL2 (Linux su Windows) o su Windows nativo (PowerShell) — per eseguire e
 testare algoritmi QGIS Processing e codice PyQGIS da terminale o in automazione
@@ -99,9 +101,14 @@ $env:QT_QPA_PLATFORM    = "offscreen"
   Vedi [examples/README.md](examples/README.md):
   - `hello_qgis.py` / `hello_qgis_win.ps1` — verifica l'ambiente.
   - `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto `.qgs`/`.qgz`.
+  - `centroids_algorithm.py` — `QgsProcessingAlgorithm` offline minimale per
+    provare il runner generico (usato anche dalla CI).
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
   algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
   [skill/README.md](skill/README.md).
+- `.github/workflows/ci.yml` — CI su GitHub Actions: crea l'ambiente QGIS da zero
+  su Ubuntu **e** Windows e lancia gli smoke test a ogni push/PR. È anche un
+  template copiabile per chi vuole testare i propri algoritmi QGIS in CI.
 
 Verifica veloce dopo l'installazione:
 
@@ -235,12 +242,22 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
 ### C) PyQGIS "a mano" (scheletro)
 
 ```python
+import gc
 from qgis.core import QgsApplication
+
+def lavoro():
+    # ... codice PyQGIS: layer, algoritmi, ... (tenere qui i riferimenti
+    # ai layer: devono essere rilasciati PRIMA di exitQgis, vedi sotto)
+    ...
+
 QgsApplication.setPrefixPath("/home/UTENTE/micromamba/envs/qgis", True)
 app = QgsApplication([], False)   # False = niente GUI
 app.initQgis()
-# ... codice PyQGIS ...
-app.exitQgis()
+try:
+    lavoro()
+finally:
+    gc.collect()      # rilascia i layer GDAL/OGR prima dello smontaggio
+    app.exitQgis()    # altrimenti: segfault all'uscita (vedi Risoluzione problemi)
 ```
 
 Esegui con: `QT_QPA_PLATFORM=offscreen micromamba run -n qgis python -u script.py`
@@ -273,6 +290,7 @@ micromamba env remove -n qgis -y
 | `micromamba: command not found` | `~/.local/bin` non nel PATH, o usa il path assoluto `~/.local/bin/micromamba`. |
 | `Could not find conda environment: qgis` | Manca `MAMBA_ROOT_PREFIX=$HOME/micromamba`, oppure l'env non è creato (Passo 3). |
 | Errori PROJ/CRS | Di norma assenti: la build conda-forge porta i propri dati PROJ. |
+| Segfault **all'uscita** dopo che lo script ha finito (exit 139 su Linux, `0xC0000005` su Windows) | Layer GDAL/OGR ancora referenziati quando `exitQgis()` smonta il provider registry. Rilasciarli prima: fai il lavoro in una funzione separata e chiama `gc.collect()` prima di `app.exitQgis()` (vedi `examples/hello_qgis.py`). |
 
 ---
 
