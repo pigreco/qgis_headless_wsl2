@@ -88,6 +88,10 @@ jobs:
           micromamba run -n qgis python -u /tmp/make_project.py
           micromamba run -n qgis python -u examples/inspect_project.py \
             --project /tmp/ci_project.qgs
+          # --json must emit valid, clean JSON on stdout
+          micromamba run -n qgis python -u examples/inspect_project.py \
+            --project /tmp/ci_project.qgs --json \
+            | python3 -m json.tool > /dev/null
 
   windows:
     name: Windows (native)
