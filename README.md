@@ -1,5 +1,7 @@
 # QGIS headless via micromamba (WSL2 + Windows)
 
+[![CI](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml/badge.svg)](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml)
+
 Guida passo-passo per installare e usare **QGIS senza interfaccia grafica** —
 in WSL2 (Linux su Windows) o su Windows nativo (PowerShell) — per eseguire e
 testare algoritmi QGIS Processing e codice PyQGIS da terminale o in automazione
@@ -102,6 +104,9 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
   algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
   [skill/README.md](skill/README.md).
+- `.github/workflows/ci.yml` — CI su GitHub Actions: crea l'ambiente QGIS da zero
+  su Ubuntu **e** Windows e lancia gli smoke test a ogni push/PR. È anche un
+  template copiabile per chi vuole testare i propri algoritmi QGIS in CI.
 
 Verifica veloce dopo l'installazione:
 

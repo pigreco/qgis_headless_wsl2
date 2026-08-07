@@ -105,3 +105,20 @@ supportati da Verto Online (vedi `--request info` in `verto_online.py`); ad
 esempio EPSG:4326 (WGS84) non è supportato come sistema di input. Il file
 `data/sample_points.geojson` contiene coordinate già in EPSG:3003
 (Monte Mario / Italy zone 1).
+
+---
+
+## 6. Algoritmo offline di esempio (`centroids_algorithm.py`)
+
+Un `QgsProcessingAlgorithm` singolo file che calcola il centroide di ogni
+feature. Non richiede rete: è l'esempio più semplice per provare il runner
+generico, ed è quello usato dalla CI.
+
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python skill/qgis-headless/scripts/run_algorithm.py \
+  --alg examples/centroids_algorithm.py \
+  --params '{"INPUT": "examples/data/sample.geojson", "OUTPUT": "memory:"}'
+```
+
+Output atteso: `>>> OUTPUT: 3 features`.
