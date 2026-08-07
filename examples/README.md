@@ -122,3 +122,34 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
 ```
 
 Output atteso: `>>> OUTPUT: 3 features`.
+
+---
+
+## 7. Rendering headless (`render_map.py`)
+
+Renderizza una mappa in PNG **senza aprire QGIS**: layer singoli (con stile QML
+opzionale) oppure un intero progetto. Utile per report automatici, anteprime di
+dataset, mappe generate in pipeline/CI.
+
+```bash
+# layer singolo
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/render_map.py \
+  --input examples/data/sample.geojson --output /tmp/mappa.png --width 800
+
+# più layer con stile QML: gli --input sono disegnati dal primo (in cima)
+# all'ultimo (in fondo), come nel pannello layer di QGIS; ogni --qml si
+# abbina posizionalmente all'--input corrispondente ("-" = nessuno stile)
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/render_map.py \
+  --input dtm.tif --qml stile_dtm.qml \
+  --input ortofoto.tif \
+  --output mappa.png --width 1600
+
+# un intero progetto (ordine layer e stili presi dal progetto)
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/render_map.py --project progetto.qgs --output mappa.png
+```
+
+Opzioni utili: `--extent xmin,ymin,xmax,ymax`, `--crs EPSG:3857`,
+`--height` (default: dal rapporto d'aspetto dell'extent), `--background`.

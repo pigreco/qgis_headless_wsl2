@@ -107,6 +107,9 @@ $env:QT_QPA_PLATFORM    = "offscreen"
   - `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto `.qgs`/`.qgz`.
   - `centroids_algorithm.py` — `QgsProcessingAlgorithm` offline minimale per
     provare il runner generico (usato anche dalla CI).
+  - `render_map.py` — renderizza una mappa in **PNG senza aprire QGIS**
+    (layer con stile QML o interi progetti): report automatici, anteprime,
+    mappe in pipeline/CI.
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
   algoritmi QGIS headless, con un runner generico. Istruzioni d'installazione in
   [skill/README.md](skill/README.md).
