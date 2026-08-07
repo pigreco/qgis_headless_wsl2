@@ -5,6 +5,7 @@ Smoke test e utility headless per verificare che l'ambiente QGIS funzioni.
 ## Dati
 
 - `data/sample.geojson` — 3 piccoli poligoni (EPSG:4326), nessuna dipendenza esterna.
+- `data/sample_points.geojson` — punti in EPSG:3003 per gli esempi Verto Online.
 
 ---
 
@@ -66,7 +67,9 @@ micromamba run -n qgis qgis_process run native:reprojectlayer -- \
 
 Per scoprire altri algoritmi: `micromamba run -n qgis qgis_process list`.
 
-## 3. Verto Online (API IGM)
+---
+
+## 4. Verto Online (API IGM)
 
 Esempio minimale per interrogare il servizio ufficiale IGM Verto Online da
 linea di comando, senza GUI:
@@ -81,7 +84,7 @@ risposta JSON complete. Per il formato ufficiale del payload vedi il repo
 [`ondata/openverto`](https://github.com/ondata/openverto), che documenta e
 incapsula lo stesso endpoint.
 
-## 4. Verto Online come algoritmo Processing
+## 5. Verto Online come algoritmo Processing
 
 Il file [`verto_processing_algorithm.py`](verto_processing_algorithm.py) è un
 `QgsProcessingAlgorithm` singolo file che converte punti tramite il servizio
