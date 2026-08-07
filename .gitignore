@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Dati raster locali di prova (troppo grandi per il repo)
+*.tif
+*.tiff
+
+# File di prova locali (Etna)
+etna_*

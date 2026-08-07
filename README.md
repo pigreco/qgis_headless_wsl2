@@ -121,7 +121,7 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
 
 - **WSL2** già attivo con una distro Linux (es. Ubuntu). Verifica da Windows:
   `wsl -l -v` (la colonna VERSION deve essere `2`).
-- Connessione a Internet dentro WSL (il download è ~hundreds of MB).
+- Connessione a Internet dentro WSL (il download è di alcune centinaia di MB).
 - ~5 GB liberi nella home WSL (`df -h ~`).
 - **Non serve** la GUI di Windows né QGIS Desktop installato.
 
