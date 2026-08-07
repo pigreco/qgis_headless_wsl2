@@ -131,7 +131,9 @@ jobs:
 
       - name: Generic runner (centroids_algorithm.py)
         run: |
-          micromamba run -n qgis python -u skill\qgis-headless\scripts\run_algorithm.py --alg examples\centroids_algorithm.py --params '{\"INPUT\": \"examples/data/sample.geojson\", \"OUTPUT\": \"memory:\"}' 2>&1 | Tee-Object -FilePath step.log
+          # JSON in un file (via --params @file) per evitare il quoting hell di pwsh
+          '{"INPUT": "examples/data/sample.geojson", "OUTPUT": "memory:"}' | Set-Content -Path params.json
+          micromamba run -n qgis python -u skill\qgis-headless\scripts\run_algorithm.py --alg examples\centroids_algorithm.py --params "@params.json" 2>&1 | Tee-Object -FilePath step.log
           if ($LASTEXITCODE -ne 0) {
             if (Select-String -Path step.log -Pattern "RESULT keys:" -Quiet) {
               Write-Host "Runner completed; known exitQgis() crash tolerated."
