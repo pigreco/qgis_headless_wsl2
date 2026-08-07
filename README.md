@@ -97,6 +97,10 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 
 - `setup.sh` — installazione one-shot idempotente (WSL2/Linux).
 - `setup.ps1` — installazione one-shot idempotente (Windows nativo, PowerShell).
+- `environment.yml` — definizione dell'ambiente con la **versione QGIS pinnata**
+  (la stessa usata dalla CI): tutti ottengono un ambiente riproducibile. Gli
+  script di setup lo usano automaticamente; per una versione diversa:
+  `bash setup.sh --version 3.40.*` / `.\setup.ps1 -QgisVersion "3.40.*"`.
 - `examples/` — smoke test e utility headless, più esempi per Verto Online.
   Vedi [examples/README.md](examples/README.md):
   - `hello_qgis.py` / `hello_qgis_win.ps1` — verifica l'ambiente.
@@ -180,7 +184,10 @@ Scarica QGIS + GDAL + PROJ + GEOS + Qt + Python e risolve le dipendenze
 
 ```bash
 export MAMBA_ROOT_PREFIX="$HOME/micromamba"
-~/.local/bin/micromamba create -n qgis -c conda-forge qgis -y
+# riproducibile: versione pinnata in environment.yml (consigliato)
+~/.local/bin/micromamba create -f environment.yml -y
+# oppure, per l'ultima versione disponibile su conda-forge:
+# ~/.local/bin/micromamba create -n qgis -c conda-forge qgis -y
 # libera la cache di download (recupera ~1.5-2 GB; l'ambiente resta intatto)
 ~/.local/bin/micromamba clean -a -y
 ```
@@ -268,7 +275,10 @@ Esegui con: `QT_QPA_PLATFORM=offscreen micromamba run -n qgis python -u script.p
 ## Manutenzione
 
 ```bash
-# aggiornare QGIS
+# aggiornare QGIS alla versione pinnata più recente: modifica la versione in
+# environment.yml, poi ricrea l'ambiente
+micromamba env remove -n qgis -y && bash setup.sh
+# oppure aggiornamento libero all'ultima di conda-forge
 micromamba update -n qgis -c conda-forge qgis -y
 # liberare la cache
 micromamba clean -a -y

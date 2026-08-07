@@ -6,16 +6,27 @@
 # reinstalla. Non modifica file di sistema; tutto resta nella home utente.
 #
 # Uso:
-#   bash setup.sh            # installa micromamba (se manca) + ambiente 'qgis'
-#   bash setup.sh --init     # come sopra, e aggiunge l'init a ~/.bashrc
+#   bash setup.sh                  # installa micromamba (se manca) + ambiente 'qgis'
+#                                  # (versione QGIS pinnata in environment.yml)
+#   bash setup.sh --init           # come sopra, e aggiunge l'init a ~/.bashrc
+#   bash setup.sh --version 3.40.* # ignora environment.yml e installa questa versione
 #
 set -euo pipefail
 
 ENV_NAME="qgis"
 MAMBA_BIN="$HOME/.local/bin/micromamba"
+ENV_FILE="$(cd "$(dirname "$0")" && pwd)/environment.yml"
 export MAMBA_ROOT_PREFIX="${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
 DO_INIT=0
-[[ "${1:-}" == "--init" ]] && DO_INIT=1
+QGIS_VERSION=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --init)    DO_INIT=1 ;;
+    --version) QGIS_VERSION="${2:?--version richiede un valore, es. 3.40.*}"; shift ;;
+    *) echo "Opzione sconosciuta: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
 
 say() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 
@@ -42,7 +53,14 @@ if "$MAMBA" env list 2>/dev/null | grep -qE "/envs/${ENV_NAME}\b|[[:space:]]${EN
   say "Ambiente '${ENV_NAME}' gia' esistente: nessuna installazione."
 else
   say "Creo l'ambiente '${ENV_NAME}' da conda-forge (qualche minuto, ~3-5 GB) ..."
-  "$MAMBA" create -n "$ENV_NAME" -c conda-forge qgis -y
+  if [[ -n "$QGIS_VERSION" ]]; then
+    "$MAMBA" create -n "$ENV_NAME" -c conda-forge "qgis=${QGIS_VERSION}" -y
+  elif [[ -f "$ENV_FILE" ]]; then
+    say "Uso environment.yml (versione QGIS pinnata) ..."
+    "$MAMBA" create -f "$ENV_FILE" -y
+  else
+    "$MAMBA" create -n "$ENV_NAME" -c conda-forge qgis -y
+  fi
   say "Pulisco la cache dei pacchetti ..."
   "$MAMBA" clean -a -y
 fi

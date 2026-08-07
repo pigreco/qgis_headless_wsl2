@@ -29,11 +29,7 @@ jobs:
       - name: Install micromamba + QGIS env
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-name: qgis
-          create-args: qgis
-          condarc: |
-            channels:
-              - conda-forge
+          environment-file: environment.yml
           cache-environment: true
 
       - name: QGIS version
@@ -96,11 +92,7 @@ jobs:
       - name: Install micromamba + QGIS env
         uses: mamba-org/setup-micromamba@v2
         with:
-          environment-name: qgis
-          create-args: qgis
-          condarc: |
-            channels:
-              - conda-forge
+          environment-file: environment.yml
           cache-environment: true
           init-shell: none
 

@@ -4,12 +4,15 @@
     Install QGIS headless on Windows via micromamba (conda-forge).
     Idempotent: skips any step that is already done.
 .EXAMPLE
-    .\setup.ps1               # install micromamba + 'qgis' environment
-    .\setup.ps1 -AddToPath    # same, and add micromamba to the user PATH
+    .\setup.ps1                       # install micromamba + 'qgis' environment
+                                      # (QGIS version pinned in environment.yml)
+    .\setup.ps1 -AddToPath            # same, and add micromamba to the user PATH
+    .\setup.ps1 -QgisVersion "3.40.*" # ignore environment.yml, install this version
 #>
 [CmdletBinding()]
 param(
-    [switch]$AddToPath
+    [switch]$AddToPath,
+    [string]$QgisVersion = ""
 )
 
 Set-StrictMode -Version Latest
@@ -64,7 +67,15 @@ if (Test-Path "$env:MAMBA_ROOT_PREFIX\envs\$ENV_NAME") {
     Say "Environment '$ENV_NAME' already exists: nothing to install."
 } else {
     Say "Creating '$ENV_NAME' from conda-forge (~3-5 GB, a few minutes) ..."
-    & $MAMBA create -n $ENV_NAME -c conda-forge qgis -y
+    $envFile = Join-Path $PSScriptRoot "environment.yml"
+    if ($QgisVersion) {
+        & $MAMBA create -n $ENV_NAME -c conda-forge "qgis=$QgisVersion" -y
+    } elseif (Test-Path $envFile) {
+        Say "Using environment.yml (pinned QGIS version) ..."
+        & $MAMBA create -f $envFile -y
+    } else {
+        & $MAMBA create -n $ENV_NAME -c conda-forge qgis -y
+    }
     Say "Cleaning package cache ..."
     & $MAMBA clean -a -y
 }

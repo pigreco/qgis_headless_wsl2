@@ -1,0 +1,10 @@
+# Ambiente QGIS headless riproducibile: stessa versione per tutti gli utenti
+# e per la CI. Per aggiornare QGIS: cambia la versione qui sotto, poi ricrea
+# l'ambiente (micromamba env remove -n qgis -y && bash setup.sh).
+#
+# La versione pinnata è l'ultima validata dalla CI su Linux e Windows.
+name: qgis
+channels:
+  - conda-forge
+dependencies:
+  - qgis=3.44.11
