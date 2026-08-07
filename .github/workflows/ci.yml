@@ -58,16 +58,23 @@ jobs:
       - name: Inspect a generated project (inspect_project.py)
         run: |
           cat > /tmp/make_project.py <<'EOF'
+          import gc
           from qgis.core import QgsApplication, QgsProject, QgsVectorLayer
+
+          def build():
+              project = QgsProject.instance()
+              layer = QgsVectorLayer("examples/data/sample.geojson", "sample", "ogr")
+              assert layer.isValid(), "sample layer not valid"
+              project.addMapLayer(layer)
+              project.setTitle("CI test project")
+              assert project.write("/tmp/ci_project.qgs"), "cannot write project"
+              # release GDAL/OGR layers before exitQgis() or Python segfaults on exit
+              project.clear()
 
           app = QgsApplication([], False)
           app.initQgis()
-          project = QgsProject.instance()
-          layer = QgsVectorLayer("examples/data/sample.geojson", "sample", "ogr")
-          assert layer.isValid(), "sample layer not valid"
-          project.addMapLayer(layer)
-          project.setTitle("CI test project")
-          assert project.write("/tmp/ci_project.qgs"), "cannot write project"
+          build()
+          gc.collect()
           app.exitQgis()
           EOF
           micromamba run -n qgis python -u /tmp/make_project.py
@@ -100,19 +107,33 @@ jobs:
       - name: QGIS version
         run: micromamba run -n qgis qgis_process --version
 
-      # 0xC0000005 (-1073741819) = known Qt exitQgis() crash on conda-forge
-      # Windows after successful processing; tolerated like in the wrappers.
+      # Sul conda-forge Windows exitQgis() può ancora crashare (0xC0000005)
+      # DOPO che lo script ha finito con successo; micromamba run rimappa
+      # quell'exit code, quindi la tolleranza controlla il marker di successo
+      # nell'output invece del codice di uscita.
       - name: Smoke test (hello_qgis.py)
         run: |
-          micromamba run -n qgis python -u examples\hello_qgis.py
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
+          micromamba run -n qgis python -u examples\hello_qgis.py 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "OK:" -Quiet) {
+              Write-Host "Script completed; known exitQgis() crash tolerated."
+            } else { exit 1 }
+          }
 
       - name: Native algorithm via qgis_process
         run: |
-          micromamba run -n qgis qgis_process run native:reprojectlayer -- INPUT=examples/data/sample.geojson TARGET_CRS=EPSG:32633 OUTPUT=$env:TEMP\sample_32633.gpkg
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
+          micromamba run -n qgis qgis_process run native:reprojectlayer -- INPUT=examples/data/sample.geojson TARGET_CRS=EPSG:32633 OUTPUT=$env:TEMP\sample_32633.gpkg 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "OUTPUT:" -Quiet) {
+              Write-Host "qgis_process completed; known crash on exit tolerated."
+            } else { exit 1 }
+          }
 
       - name: Generic runner (centroids_algorithm.py)
         run: |
-          micromamba run -n qgis python -u skill\qgis-headless\scripts\run_algorithm.py --alg examples\centroids_algorithm.py --params '{\"INPUT\": \"examples/data/sample.geojson\", \"OUTPUT\": \"memory:\"}'
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1073741819) { exit $LASTEXITCODE }
+          micromamba run -n qgis python -u skill\qgis-headless\scripts\run_algorithm.py --alg examples\centroids_algorithm.py --params '{\"INPUT\": \"examples/data/sample.geojson\", \"OUTPUT\": \"memory:\"}' 2>&1 | Tee-Object -FilePath step.log
+          if ($LASTEXITCODE -ne 0) {
+            if (Select-String -Path step.log -Pattern "RESULT keys:" -Quiet) {
+              Write-Host "Runner completed; known exitQgis() crash tolerated."
+            } else { exit 1 }
+          }

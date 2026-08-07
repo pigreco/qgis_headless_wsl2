@@ -12,7 +12,10 @@ Uso (dentro l'ambiente 'qgis'):
     ... python examples/hello_qgis.py --input /percorso/layer.shp
 """
 import argparse
+import gc
 import os
+import sys
+import traceback
 
 from qgis.core import Qgis, QgsApplication, QgsVectorLayer
 
@@ -29,6 +32,23 @@ def _default_prefix():
     return prefix
 
 
+def show_layer_info(path):
+    print("QGIS", Qgis.QGIS_VERSION, "inizializzato (headless)")
+    layer = QgsVectorLayer(path, "sample", "ogr")
+    if not layer.isValid():
+        raise RuntimeError(f"Layer non valido: {path}")
+
+    print("Input   :", path)
+    print("Feature :", layer.featureCount())
+    print("CRS     :", layer.crs().authid())
+    print("Extent  :", layer.extent().toString(4))
+    print("Campi   :", [f.name() for f in layer.fields()])
+    print("\nPrime feature:")
+    for feat in list(layer.getFeatures())[:5]:
+        print("  -", dict(zip(layer.fields().names(), feat.attributes())))
+    print("\nOK: l'ambiente QGIS headless funziona.")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default=DEFAULT_INPUT, help="layer vettoriale da leggere")
@@ -41,23 +61,21 @@ def main():
         QgsApplication.setPrefixPath(args.prefix, True)
     app = QgsApplication([], False)
     app.initQgis()
+    exit_code = 0
     try:
-        print("QGIS", Qgis.QGIS_VERSION, "inizializzato (headless)")
-        layer = QgsVectorLayer(args.input, "sample", "ogr")
-        if not layer.isValid():
-            raise SystemExit(f"Layer non valido: {args.input}")
-
-        print("Input   :", args.input)
-        print("Feature :", layer.featureCount())
-        print("CRS     :", layer.crs().authid())
-        print("Extent  :", layer.extent().toString(4))
-        print("Campi   :", [f.name() for f in layer.fields()])
-        print("\nPrime feature:")
-        for feat in list(layer.getFeatures())[:5]:
-            print("  -", dict(zip(layer.fields().names(), feat.attributes())))
-        print("\nOK: l'ambiente QGIS headless funziona.")
+        show_layer_info(args.input)
+    except Exception:
+        # Catturare qui (invece di lasciar propagare) libera i locals di
+        # show_layer_info(): i layer GDAL/OGR devono essere rilasciati PRIMA
+        # di exitQgis(), altrimenti la loro finalizzazione dopo lo smontaggio
+        # del provider registry manda in segfault l'interprete in uscita.
+        traceback.print_exc()
+        exit_code = 1
     finally:
+        gc.collect()
         app.exitQgis()
+    if exit_code:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":
