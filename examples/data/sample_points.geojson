@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "name": "sample_points",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3003" } },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"id": 1, "nome": "Roma"},
+      "geometry": {"type": "Point", "coordinates": [1789780.281, 4643496.996]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"id": 2, "nome": "Firenze"},
+      "geometry": {"type": "Point", "coordinates": [1681587.633, 4848772.196]}
+    }
+  ]
+}

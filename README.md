@@ -95,7 +95,8 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 
 - `setup.sh` — installazione one-shot idempotente (WSL2/Linux).
 - `setup.ps1` — installazione one-shot idempotente (Windows nativo, PowerShell).
-- `examples/` — smoke test e utility headless. Vedi [examples/README.md](examples/README.md):
+- `examples/` — smoke test e utility headless, più esempi per Verto Online.
+  Vedi [examples/README.md](examples/README.md):
   - `hello_qgis.py` / `hello_qgis_win.ps1` — verifica l'ambiente.
   - `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto `.qgs`/`.qgz`.
 - `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
