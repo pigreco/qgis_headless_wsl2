@@ -75,7 +75,9 @@ If the env is **missing**, create it (downloads ~3–5 GB, takes a few minutes):
 **WSL2/Linux:**
 ```bash
 # install micromamba if needed
-mkdir -p ~/.local/bin && curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
+mkdir -p ~/.local/bin \
+  && ARCH=$([ "$(uname -m)" = "aarch64" ] && echo linux-aarch64 || echo linux-64) \
+  && curl -Ls "https://micro.mamba.pm/api/micromamba/${ARCH}/latest" \
   | tar -xj -C /tmp bin/micromamba && cp /tmp/bin/micromamba ~/.local/bin/ && chmod +x ~/.local/bin/micromamba
 # create the env, then free the download cache
 export MAMBA_ROOT_PREFIX="$HOME/micromamba"

@@ -18,8 +18,13 @@ concurrency:
 
 jobs:
   linux:
-    name: Linux (Ubuntu)
-    runs-on: ubuntu-latest
+    name: Linux (${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu-24.04-arm copre WSL2 su Windows on ARM e i Linux ARM nativi
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
     timeout-minutes: 60
     env:
       QT_QPA_PLATFORM: offscreen

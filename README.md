@@ -148,7 +148,9 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
 
 ```bash
 mkdir -p ~/.local/bin
-curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest \
+# ARCH: linux-64 su Intel/AMD, linux-aarch64 su ARM (es. Windows on ARM, Raspberry Pi)
+ARCH=$([ "$(uname -m)" = "aarch64" ] && echo linux-aarch64 || echo linux-64)
+curl -Ls "https://micro.mamba.pm/api/micromamba/${ARCH}/latest" \
   | tar -xj -C /tmp bin/micromamba
 cp /tmp/bin/micromamba ~/.local/bin/micromamba
 chmod +x ~/.local/bin/micromamba
