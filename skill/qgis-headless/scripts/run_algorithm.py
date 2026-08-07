@@ -12,8 +12,10 @@ Usage:
         --alg /path/to/algorithm.py \
         --params '{"INPUT": "/path/in.shp", "OUTPUT": "memory:"}'
 
-In --params, string values that point to an existing file are loaded as vector
-layers; all other values are passed through unchanged.
+In --params, string values that point to an existing file are loaded as map
+layers (raster when the extension says so, vector otherwise); all other values
+are passed through unchanged. With --project, a .qgs/.qgz project is loaded
+into the processing context so algorithms can reference project layers.
 """
 import argparse
 import gc
@@ -35,8 +37,12 @@ from qgis.core import (  # noqa: E402
     QgsProcessingAlgorithm,
     QgsProcessingContext,
     QgsProcessingFeedback,
+    QgsProject,
+    QgsRasterLayer,
     QgsVectorLayer,
 )
+
+RASTER_EXTS = {".tif", ".tiff", ".vrt", ".asc", ".img", ".jp2", ".xyz", ".nc"}
 
 
 class PrintFeedback(QgsProcessingFeedback):
@@ -68,24 +74,29 @@ def find_algorithm_class(mod, class_name=None):
         for c in classes:
             if c.__name__ == class_name:
                 return c
-        sys.exit(f"Class '{class_name}' not found. Available: "
-                 f"{[c.__name__ for c in classes]}")
+        raise RuntimeError(f"Class '{class_name}' not found. Available: "
+                           f"{[c.__name__ for c in classes]}")
     if not classes:
-        sys.exit("No QgsProcessingAlgorithm subclass found in the module.")
+        raise RuntimeError("No QgsProcessingAlgorithm subclass found in the module.")
     if len(classes) > 1:
-        sys.exit(f"Multiple algorithm classes found, use --class: "
-                 f"{[c.__name__ for c in classes]}")
+        raise RuntimeError(f"Multiple algorithm classes found, use --class: "
+                           f"{[c.__name__ for c in classes]}")
     return classes[0]
 
 
 def resolve_params(raw):
-    """Load existing-file string values as vector layers; pass through the rest."""
+    """Load existing-file string values as map layers (raster by extension,
+    vector otherwise); pass through the rest."""
     resolved = {}
     for key, val in raw.items():
         if isinstance(val, str) and os.path.isfile(val):
-            layer = QgsVectorLayer(val, os.path.basename(val), "ogr")
+            name = os.path.basename(val)
+            if os.path.splitext(val)[1].lower() in RASTER_EXTS:
+                layer = QgsRasterLayer(val, name)
+            else:
+                layer = QgsVectorLayer(val, name, "ogr")
             if not layer.isValid():
-                sys.exit(f"Invalid layer for param {key}: {val}")
+                raise RuntimeError(f"Invalid layer for param {key}: {val}")
             resolved[key] = layer
         else:
             resolved[key] = val
@@ -108,6 +119,10 @@ def main():
                     help="JSON dict of parameters (or @file.json)")
     ap.add_argument("--class", dest="class_name", default=None,
                     help="algorithm class name (if the module has several)")
+    ap.add_argument("--project", default=None,
+                    help="optional .qgs/.qgz project to load into the "
+                         "processing context (for algorithms that use "
+                         "project layers)")
     ap.add_argument("--prefix", default=_default_prefix(),
                     help="QGIS prefix path (default: $CONDA_PREFIX, Library auto-detected on Windows)")
     ap.add_argument("--set", action="append", default=[], metavar="MOD.ATTR=VAL",
@@ -139,7 +154,19 @@ def main():
         print(f"Running: {alg.__class__.__name__}")
 
         ctx = QgsProcessingContext()
+        if args.project:
+            project = QgsProject.instance()
+            if not project.read(args.project):
+                raise RuntimeError(f"Cannot read project: {args.project}")
+            print(f"Project loaded: {args.project} "
+                  f"({len(project.mapLayers())} layers)")
+            ctx.setProject(project)
         params = resolve_params(raw_params)
+
+        ok, msg = alg.checkParameterValues(params, ctx)
+        if not ok:
+            raise RuntimeError(f"Invalid parameters: {msg}")
+
         result = alg.processAlgorithm(params, ctx, PrintFeedback())
 
         print("RESULT keys:", list(result.keys()))
@@ -168,6 +195,8 @@ def main():
         traceback.print_exc()
         exit_code = 1
     finally:
+        # release project layers and run()'s leftovers before teardown
+        QgsProject.instance().clear()
         gc.collect()
         app.exitQgis()
     if exit_code:

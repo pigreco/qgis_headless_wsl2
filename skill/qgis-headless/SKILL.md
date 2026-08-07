@@ -127,9 +127,14 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
 ```
 
 - In `--params`, any string value that is an **existing file path** is loaded as
-  a vector layer; everything else is passed through (booleans, ints, `"memory:"`,
-  output paths, enum indices, …).
+  a map layer — raster if the extension is one of `.tif .tiff .vrt .asc .img
+  .jp2 .xyz .nc`, vector otherwise; everything else is passed through (booleans,
+  ints, `"memory:"`, output paths, enum indices, …).
+- Parameters are validated with `checkParameterValues()` before running, so
+  mistakes fail fast with a clear message instead of a mid-run exception.
 - `--class NAME` if the module defines more than one algorithm class.
+- `--project /path/to/project.qgs` loads a project into the processing context,
+  for algorithms that reference **project layers** (`context.project()`).
 - Add `python -u` (or it is set automatically) to avoid losing buffered stdout if
   the run crashes; pipe through `tail`/`grep` to keep output readable.
 
