@@ -52,6 +52,15 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
 .\examples\inspect_project_win.ps1 -Project C:\lavoro\progetto.qgs
 ```
 
+Con `--json` emette un documento JSON machine-readable (stdout pulito,
+pipe-abile direttamente in `jq` o altri strumenti):
+
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/inspect_project.py --project progetto.qgs --json \
+  | jq -r '.layers[] | "\(.name): \(.type), \(.crs)"'
+```
+
 ---
 
 ## 3. Algoritmo nativo via `qgis_process`
