@@ -102,7 +102,7 @@ jobs:
             channels:
               - conda-forge
           cache-environment: true
-          init-shell: powershell
+          init-shell: none
 
       - name: QGIS version
         run: micromamba run -n qgis qgis_process --version
