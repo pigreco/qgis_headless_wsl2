@@ -10,6 +10,8 @@
     Use @C:\file.json to load from a file.
 .PARAMETER ClassName
     Class name to use if the module defines more than one algorithm.
+.PARAMETER Project
+    Optional .qgs/.qgz project to load into the processing context.
 .PARAMETER Set
     Override a module attribute before running, e.g. PAUSE_SECONDS=0.
     Repeat the flag for multiple overrides.
@@ -23,6 +25,7 @@ param(
     [Parameter(Mandatory)][string]$Alg,
     [string]  $Params    = "{}",
     [string]  $ClassName = "",
+    [string]  $Project   = "",
     [string[]]$Set       = @(),
     [string]  $MambaExe  = "$env:LOCALAPPDATA\micromamba\micromamba.exe"
 )
@@ -50,6 +53,7 @@ if (-not $env:MAMBA_ROOT_PREFIX) { $env:MAMBA_ROOT_PREFIX = "$env:USERPROFILE\mi
 
 $args_list = @("python", "-u", $RUNNER, "--alg", $Alg, "--params", $Params)
 if ($ClassName) { $args_list += @("--class", $ClassName) }
+if ($Project)   { $args_list += @("--project", $Project) }
 foreach ($s in $Set) { $args_list += @("--set", $s) }
 
 $ErrorActionPreference = "Continue"
