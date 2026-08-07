@@ -6,6 +6,7 @@ Smoke test e utility headless per verificare che l'ambiente QGIS funzioni.
 
 - `data/sample.geojson` — 3 piccoli poligoni (EPSG:4326), nessuna dipendenza esterna.
 - `data/sample_points.geojson` — punti in EPSG:3003 per gli esempi Verto Online.
+- `data/sample_points_3003.csv` — gli stessi punti in CSV, per il batch Verto.
 
 ---
 
@@ -86,7 +87,15 @@ linea di comando, senza GUI:
 ```bash
 python examples/verto_online.py --request info
 python examples/verto_online.py --from-epsg 3003 --to-epsg 6707 --coord 1500000 4640000
+
+# batch da CSV (colonne e,n / x,y, o le prime due; delimitatore , o ;)
+# con risultato scritto in un CSV (e_in,n_in,e_out,n_out):
+python examples/verto_online.py --from-epsg 3003 --to-epsg 6707 \
+  --csv examples/data/sample_points_3003.csv --output convertiti.csv
 ```
+
+Le richieste vengono suddivise automaticamente in blocchi da 32.000 punti
+(il limite del servizio), quindi il CSV può essere grande a piacere.
 
 Lo script usa il servizio pubblico indicato da IGM e stampa richiesta e
 risposta JSON complete. Per il formato ufficiale del payload vedi il repo
