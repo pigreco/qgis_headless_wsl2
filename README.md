@@ -3,12 +3,24 @@
 [![CI](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml/badge.svg)](https://github.com/pigreco/qgis_headless_wsl2/actions/workflows/ci.yml)
 
 Guida passo-passo per installare e usare **QGIS senza interfaccia grafica** —
-in WSL2 (Linux su Windows) o su Windows nativo (PowerShell) — per eseguire e
-testare algoritmi QGIS Processing e codice PyQGIS da terminale o in automazione
-(CI), senza aprire il desktop.
+in WSL2 (Linux su Windows, x86_64 e ARM) o su Windows nativo (PowerShell) —
+per l'intero ciclo headless: eseguire e testare algoritmi QGIS Processing,
+codice PyQGIS, ispezionare progetti e **renderizzare mappe in PNG**, da
+terminale o in automazione, senza mai aprire il desktop. Tutto è verificato
+dalla CI su tre piattaforme (Ubuntu x86_64, Ubuntu ARM, Windows).
 
 > "Headless" = nessuna finestra. Per Qt serve un *platform plugin* offscreen:
 > `export QT_QPA_PLATFORM=offscreen` (Linux) / `$env:QT_QPA_PLATFORM = "offscreen"` (Windows).
+
+**Indice**: [Avvio rapido WSL2](#avvio-rapido--wsl2-script-automatico) ·
+[Avvio rapido Windows](#avvio-rapido--windows-nativo-senza-wsl2) ·
+[Contenuto del repo](#contenuto-del-repo) ·
+[Prerequisiti](#prerequisiti) ·
+[Guida manuale (Passi 1–5)](#passo-1--installare-micromamba-un-singolo-binario) ·
+[Uso](#uso) ·
+[Manutenzione](#manutenzione) ·
+[Risoluzione problemi](#risoluzione-problemi) ·
+[Note](#note)
 
 ---
 
@@ -20,10 +32,15 @@ idempotente: non reinstalla nulla se è già presente):
 ```bash
 git clone https://github.com/pigreco/qgis_headless_wsl2.git
 cd qgis_headless_wsl2
-bash setup.sh            # installa micromamba (se manca) + l'ambiente 'qgis'
-# oppure, per attivare 'micromamba activate' in ogni terminale:
-bash setup.sh --init
+bash setup.sh                  # installa micromamba (se manca) + l'ambiente 'qgis'
+# opzioni:
+bash setup.sh --init           # attiva 'micromamba activate' in ogni terminale
+bash setup.sh --version 3.40.* # una versione QGIS diversa da quella pinnata
 ```
+
+La versione QGIS installata è **pinnata in `environment.yml`** (la stessa
+validata dalla CI): ambiente riproducibile, uguale per tutti. Funziona su
+x86_64 **e** ARM (l'architettura è rilevata automaticamente).
 
 Al termine verifica con:
 
@@ -40,10 +57,12 @@ Chi preferisce capire ogni passaggio può seguire la guida manuale qui sotto.
 Per chi vuole girare tutto in **PowerShell nativo** (niente WSL2), usa `setup.ps1`:
 
 ```powershell
-cd C:\tools\qgis_headless
-.\setup.ps1              # installa micromamba + ambiente 'qgis'
-# oppure, per aggiungere micromamba al PATH utente:
-.\setup.ps1 -AddToPath
+git clone https://github.com/pigreco/qgis_headless_wsl2.git
+cd qgis_headless_wsl2
+.\setup.ps1                        # installa micromamba + ambiente 'qgis'
+# opzioni:
+.\setup.ps1 -AddToPath             # aggiunge micromamba al PATH utente
+.\setup.ps1 -QgisVersion "3.40.*"  # una versione QGIS diversa da quella pinnata
 ```
 
 Al termine verifica con:
@@ -95,27 +114,43 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 
 ## Contenuto del repo
 
-- `setup.sh` — installazione one-shot idempotente (WSL2/Linux).
-- `setup.ps1` — installazione one-shot idempotente (Windows nativo, PowerShell).
+**Setup e ambiente**
+
+- `setup.sh` / `setup.ps1` — installazione one-shot idempotente
+  (WSL2/Linux e Windows nativo).
 - `environment.yml` — definizione dell'ambiente con la **versione QGIS pinnata**
   (la stessa usata dalla CI): tutti ottengono un ambiente riproducibile. Gli
   script di setup lo usano automaticamente; per una versione diversa:
   `bash setup.sh --version 3.40.*` / `.\setup.ps1 -QgisVersion "3.40.*"`.
-- `examples/` — smoke test e utility headless, più esempi per Verto Online.
-  Vedi [examples/README.md](examples/README.md):
-  - `hello_qgis.py` / `hello_qgis_win.ps1` — verifica l'ambiente.
-  - `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto `.qgs`/`.qgz`.
-  - `centroids_algorithm.py` — `QgsProcessingAlgorithm` offline minimale per
-    provare il runner generico (usato anche dalla CI).
-  - `render_map.py` — renderizza una mappa in **PNG senza aprire QGIS**
-    (layer con stile QML o interi progetti): report automatici, anteprime,
-    mappe in pipeline/CI.
-- `skill/` — una **skill per Claude Code** (`qgis-headless`) per eseguire/testare
-  algoritmi QGIS headless, con un runner generico. Installazione/aggiornamento
-  con un comando: `bash install_skill.sh` (WSL2/Linux) o `.\install_skill.ps1`
-  (Windows). Dettagli in [skill/README.md](skill/README.md).
-- `.github/workflows/ci.yml` — CI su GitHub Actions: crea l'ambiente QGIS da zero
-  su Ubuntu **e** Windows e lancia gli smoke test a ogni push/PR. È anche un
+
+**Esempi** (dettagli in [examples/README.md](examples/README.md))
+
+- `hello_qgis.py` / `hello_qgis_win.ps1` — smoke test: verifica l'ambiente.
+- `inspect_project.py` / `inspect_project_win.ps1` — ispeziona un progetto
+  `.qgs`/`.qgz`; con `--json` emette output machine-readable (pipe-abile in `jq`).
+- `centroids_algorithm.py` — `QgsProcessingAlgorithm` offline minimale per
+  provare il runner generico (usato anche dalla CI).
+- `render_map.py` — renderizza una mappa in **PNG senza aprire QGIS**
+  (layer con stile QML o interi progetti): report automatici, anteprime,
+  mappe in pipeline/CI.
+- `verto_online.py` / `verto_processing_algorithm.py` — conversione di
+  coordinate con l'API ufficiale IGM **Verto Online**, anche batch da CSV
+  (`--csv punti.csv --output convertiti.csv`, chunking automatico).
+
+**Skill per Claude Code**
+
+- `skill/` — la skill **`qgis-headless`**: insegna a Claude Code a
+  eseguire/testare algoritmi QGIS headless con un runner generico
+  (raster e vettoriali nei parametri, `--project`, validazione).
+  Installazione e aggiornamento con un comando: `bash install_skill.sh`
+  (anche `--project` per il team, `--symlink` per chi sviluppa) o
+  `.\install_skill.ps1`. Dettagli in [skill/README.md](skill/README.md).
+
+**CI**
+
+- `.github/workflows/ci.yml` — GitHub Actions: crea l'ambiente QGIS da zero su
+  **Ubuntu x86_64, Ubuntu ARM e Windows** e a ogni push/PR esercita smoke test,
+  `qgis_process`, runner generico, ispezione progetti e rendering. È anche un
   template copiabile per chi vuole testare i propri algoritmi QGIS in CI.
 
 Verifica veloce dopo l'installazione:
@@ -134,11 +169,17 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis python examples/hello_qgis.py
 
 ## Prerequisiti
 
-- **WSL2** già attivo con una distro Linux (es. Ubuntu). Verifica da Windows:
-  `wsl -l -v` (la colonna VERSION deve essere `2`).
+Per la via **WSL2** (guida manuale qui sotto):
+
+- **WSL2** già attivo con una distro Linux (es. Ubuntu), x86_64 o ARM.
+  Verifica da Windows: `wsl -l -v` (la colonna VERSION deve essere `2`).
 - Connessione a Internet dentro WSL (il download è di alcune centinaia di MB).
 - ~5 GB liberi nella home WSL (`df -h ~`).
-- **Non serve** la GUI di Windows né QGIS Desktop installato.
+
+Per la via **Windows nativa** basta PowerShell 5.1+ (preinstallato) e gli
+stessi ~5 GB liberi nel profilo utente.
+
+In entrambi i casi **non serve** la GUI né QGIS Desktop installato.
 
 > **Perché micromamba e non `apt`?** I repo apt di qgis.org per distro vecchie
 > (es. Ubuntu 20.04 "focal", ormai EOL) non hanno più build recenti.
@@ -252,7 +293,31 @@ QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
   --params '{"INPUT": "/percorso/input.shp", "OUTPUT": "memory:"}'
 ```
 
-### C) PyQGIS "a mano" (scheletro)
+Nei `--params` i path esistenti diventano layer (raster o vettoriali in base
+all'estensione); i parametri sono **validati prima dell'esecuzione**; con
+`--project progetto.qgs` l'algoritmo può usare i layer del progetto; `@file.json`
+per parametri da file. Tutte le opzioni in
+[skill/qgis-headless/SKILL.md](skill/qgis-headless/SKILL.md).
+
+### C) Ispezionare un progetto
+
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/inspect_project.py --project progetto.qgs          # per umani
+  # ... --project progetto.qgs --json | jq '.layers[].name'          # per macchine
+```
+
+### D) Renderizzare una mappa in PNG
+
+```bash
+QT_QPA_PLATFORM=offscreen micromamba run -n qgis \
+  python examples/render_map.py \
+  --input dtm.tif --qml stile.qml --input ortofoto.tif \
+  --output mappa.png --width 1600
+# oppure un intero progetto: --project progetto.qgs
+```
+
+### E) PyQGIS "a mano" (scheletro)
 
 ```python
 import gc
