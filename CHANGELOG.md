@@ -4,15 +4,20 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 ---
 
-## [Non rilasciato]
+## [1.1.1] — 2026-10-03
+
+QGIS LTR dall'etichetta `qgis_ltr` di conda-forge (versione pinnata 3.44.15),
+guida ai vantaggi di QGIS headless e nuovo esempio di profilo altimetrico.
 
 ### Aggiunte
 
 - **`docs/vantaggi.md`** — guida ai vantaggi di QGIS headless (tecnici, operativi,
   economici), casi d'uso, confronto con le alternative e limiti; linkata
   dall'indice del README.
+  ([PR #18](https://github.com/pigreco/qgis_headless_wsl2/pull/18))
 - **`examples/profile_dtm.py`** — profilo altimetrico lungo la diagonale SW→NE
   di un DTM, disegnato in PNG con matplotlib.
+  ([PR #18](https://github.com/pigreco/qgis_headless_wsl2/pull/18))
 
 ### Modifiche
 
@@ -25,6 +30,7 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 - **README** — indica la versione pinnata corrente, linka `CHANGELOG.md` e
   `docs/vantaggi.md`, elenca `profile_dtm.py` e aggiunge alla Risoluzione
   problemi il caso dell'`update` che non propone l'ultima LTR.
+  ([PR #18](https://github.com/pigreco/qgis_headless_wsl2/pull/18))
 
 ---
 
@@ -149,6 +155,10 @@ via micromamba su WSL2/Linux. Supporto Windows aggiunto da @aborruso (PR #2).
 
 ## Note sulla versione
 
+- **1.1.1 è una patch release** — cambia la provenienza e la versione di QGIS
+  (LTR 3.44.15 dall'etichetta `qgis_ltr`) e aggiunge documentazione; nessuna
+  modifica al comportamento di script e runner. Gli ambienti già installati
+  restano alla versione precedente finché non vengono ricreati o aggiornati.
 - **1.1.0 è una major update** — aggiunge feature significative (rendering,
   JSON, CSV batch, installer) e correzioni di bug reale (segfault). Retrocompatibile
   per il codice PyQGIS/Processing.
