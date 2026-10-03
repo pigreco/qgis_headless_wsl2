@@ -6,12 +6,25 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 ## [Non rilasciato]
 
+### Aggiunte
+
+- **`docs/vantaggi.md`** — guida ai vantaggi di QGIS headless (tecnici, operativi,
+  economici), casi d'uso, confronto con le alternative e limiti; linkata
+  dall'indice del README.
+- **`examples/profile_dtm.py`** — profilo altimetrico lungo la diagonale SW→NE
+  di un DTM, disegnato in PNG con matplotlib.
+
 ### Modifiche
 
 - **QGIS LTR dall'etichetta `qgis_ltr`** — `environment.yml`, `setup.sh`,
   `setup.ps1`, README e skill usano ora `conda-forge/label/qgis_ltr` (prima di
   `conda-forge`): la LTR più recente è pubblicata lì e non sul canale principale.
-  Versione pinnata aggiornata da 3.44.11 a 3.44.15.
+  Versione pinnata aggiornata da 3.44.11 a 3.44.15, validata dalla CI su
+  Linux x86_64, Linux ARM e Windows.
+  ([PR #17](https://github.com/pigreco/qgis_headless_wsl2/pull/17))
+- **README** — indica la versione pinnata corrente, linka `CHANGELOG.md` e
+  `docs/vantaggi.md`, elenca `profile_dtm.py` e aggiunge alla Risoluzione
+  problemi il caso dell'`update` che non propone l'ultima LTR.
 
 ---
 
