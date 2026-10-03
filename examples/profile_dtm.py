@@ -49,7 +49,6 @@ def extract_profile(dtm_path, num_samples=500):
     # SW to NE diagonal line (in pixel coordinates)
     distances = []
     elevations = []
-    pixel_size = ((gt[1]**2 + gt[5]**2) ** 0.5)  # avg pixel size
 
     for i in range(num_samples):
         t = i / (num_samples - 1)  # 0.0 to 1.0
@@ -57,8 +56,8 @@ def extract_profile(dtm_path, num_samples=500):
         px = int(t * (width - 1))
         py = int(t * (height - 1))
 
-        # Distance along the diagonal (in meters)
-        dist_meters = (px**2 + py**2) ** 0.5 * pixel_size
+        # Distance along the diagonal (in CRS units: meters for a projected CRS)
+        dist_meters = ((px * gt[1])**2 + (py * gt[5])**2) ** 0.5
 
         # Read pixel value
         try:

@@ -22,7 +22,7 @@ QGIS headless non richiede X11, Wayland, WSLg o desktop remoto. Gira ovunque ci 
 
 ### Consumo di risorse minimale
 
-Senza GUI (finestre, temi, rendering Qt): memoria ridotta di 40–60%, CPU libera, zero latenza di rendering iniziale. Idoneo a workload batch, server a basso costo, container isolati, ambienti ristretti (VPS budget, embedded).
+Senza GUI (finestre, temi, rendering Qt) non si paga la memoria e la CPU dell'interfaccia, né il tempo di avvio del desktop. Idoneo a workload batch, server a basso costo, container isolati, ambienti ristretti (VPS budget, embedded).
 
 **Footprint tipico:** ~5 GB per l'ambiente completo QGIS; esecuzione in ~200 MB RAM per script leggeri, fino a 1–2 GB per raster grandi.
 
@@ -40,7 +40,7 @@ Tutti i nativi di QGIS (`native:buffer`, `native:dissolve`, …) e i plugin Proc
 
 ### Rendering deterministico
 
-Senza variabilità di tema Qt, DPI, font system (usa font integrate nella build QGIS), i PNG generati sono byte-uguali tra runhost diversi. Sfruttabile per test su CI: generi una mappa, la confronti pixel-perfect o hashsum.
+Senza variabilità di tema Qt, DPI, font system (usa font integrate nella build QGIS), i PNG generati sono stabili tra un'esecuzione e l'altra nello stesso ambiente pinnato. Sfruttabile per test su CI: generi una mappa e la confronti con una di riferimento, con una piccola tolleranza (tra piattaforme o versioni diverse di Qt/font qualche pixel può cambiare).
 
 **Bonus:** batch rendering di centinaia di progetti senza saturare memoria (un layer alla volta).
 
@@ -99,9 +99,9 @@ Script headless può scrivere metriche, logare errori in syslog, inviare notific
 
 ### Riduzione costi di infrastruttura
 
-- **Server leggeri:** no X11, no GPU, no RAM per rendering GUI → hosting su t3.small AWS (1 GB RAM) anzichè m5.xlarge.
-- **Container slim:** immagine Docker < 2 GB (base + micromamba + QGIS), containerizzabile in Kubernetes con limiti ristretti (512 MB mem request).
-- **No QGIS Desktop:** se l'unico scopo è automazione, non servono 20 licenze Desktop a 600€/anno — QGIS è open source, i costi sono hosting + lavoro.
+- **Server leggeri:** no X11, no GPU, no RAM per rendering GUI → per script leggeri basta una VM piccola, senza scheda grafica né desktop remoto.
+- **Container senza desktop:** l'immagine contiene solo base + micromamba + ambiente QGIS (~5 GB, come l'ambiente locale), senza server grafico; la memoria richiesta dipende dai dati elaborati, non dalla GUI.
+- **No QGIS Desktop:** se l'unico scopo è automazione, non serve installare e mantenere QGIS Desktop su ogni macchina — QGIS è open source e gratuito in entrambe le forme, i costi sono hosting + lavoro.
 
 ### Velocità di sviluppo
 
@@ -137,7 +137,7 @@ Un endpoint `/buffer?shapefile=input.shp&distance=50` che torna il buffer in Geo
 
 ### 🐳 Microservizio in Docker
 
-Un container Debian slim + micromamba + QGIS headless che orchestri Kubernetes espone via gRPC un endpoint di processing. Headless: container < 2 GB, avviabile in 10 secondi, horizontally scalable (5 pod per gestire il carico).
+Un container Debian slim + micromamba + QGIS headless che orchestri Kubernetes espone via gRPC un endpoint di processing. Headless: container senza server grafico, avviabile in pochi secondi, horizontally scalable (5 pod per gestire il carico).
 
 ### 🔍 Ispezione e validazione di progetti
 
