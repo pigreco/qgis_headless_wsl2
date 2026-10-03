@@ -14,6 +14,7 @@ dalla CI su tre piattaforme (Ubuntu x86_64, Ubuntu ARM, Windows).
 
 **Indice**: [Avvio rapido WSL2](#avvio-rapido--wsl2-script-automatico) ·
 [Avvio rapido Windows](#avvio-rapido--windows-nativo-senza-wsl2) ·
+[Vantaggi](docs/vantaggi.md) ·
 [Contenuto del repo](#contenuto-del-repo) ·
 [Prerequisiti](#prerequisiti) ·
 [Guida manuale (Passi 1–5)](#passo-1--installare-micromamba-un-singolo-binario) ·
@@ -38,8 +39,9 @@ bash setup.sh --init           # attiva 'micromamba activate' in ogni terminale
 bash setup.sh --version 3.40.* # una versione QGIS diversa da quella pinnata
 ```
 
-La versione QGIS installata è **pinnata in `environment.yml`** (la stessa
-validata dalla CI): ambiente riproducibile, uguale per tutti. Funziona su
+La versione QGIS installata è **pinnata in `environment.yml`** (oggi la
+**3.44.15 LTR**, la stessa validata dalla CI): ambiente riproducibile, uguale
+per tutti. Funziona su
 x86_64 **e** ARM (l'architettura è rilevata automaticamente).
 
 > **QGIS LTR e l'etichetta `qgis_ltr`** — conda-forge pubblica la LTR sotto
@@ -124,7 +126,8 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 - `setup.sh` / `setup.ps1` — installazione one-shot idempotente
   (WSL2/Linux e Windows nativo).
 - `environment.yml` — definizione dell'ambiente con la **versione QGIS pinnata**
-  (la stessa usata dalla CI): tutti ottengono un ambiente riproducibile. Gli
+  (la stessa usata dalla CI), presa dalla LTR di conda-forge (etichetta
+  `qgis_ltr`): tutti ottengono un ambiente riproducibile. Gli
   script di setup lo usano automaticamente; per una versione diversa:
   `bash setup.sh --version 3.40.*` / `.\setup.ps1 -QgisVersion "3.40.*"`.
 
@@ -138,9 +141,17 @@ $env:QT_QPA_PLATFORM    = "offscreen"
 - `render_map.py` — renderizza una mappa in **PNG senza aprire QGIS**
   (layer con stile QML o interi progetti): report automatici, anteprime,
   mappe in pipeline/CI.
+- `profile_dtm.py` — estrae un profilo altimetrico lungo la diagonale SW→NE di
+  un DTM e lo disegna in PNG con matplotlib.
 - `verto_online.py` / `verto_processing_algorithm.py` — conversione di
   coordinate con l'API ufficiale IGM **Verto Online**, anche batch da CSV
   (`--csv punti.csv --output convertiti.csv`, chunking automatico).
+
+**Documentazione**
+
+- [docs/vantaggi.md](docs/vantaggi.md) — i vantaggi di QGIS headless: tecnici,
+  operativi, casi d'uso, limiti.
+- [CHANGELOG.md](CHANGELOG.md) — storia delle modifiche, versione per versione.
 
 **Skill per Claude Code**
 
@@ -375,6 +386,7 @@ micromamba env remove -n qgis -y
 | Nessun output quando si fa `| grep`/`| tail` e lo script termina male | Buffering: usa `python -u`. |
 | `micromamba: command not found` | `~/.local/bin` non nel PATH, o usa il path assoluto `~/.local/bin/micromamba`. |
 | `Could not find conda environment: qgis` | Manca `MAMBA_ROOT_PREFIX=$HOME/micromamba`, oppure l'env non è creato (Passo 3). |
+| `micromamba update` non propone l'ultima LTR | La LTR è sotto l'etichetta `qgis_ltr`: usa `-c conda-forge/label/qgis_ltr -c conda-forge` (vedi [Manutenzione](#manutenzione)). |
 | Errori PROJ/CRS | Di norma assenti: la build conda-forge porta i propri dati PROJ. |
 | Segfault **all'uscita** dopo che lo script ha finito (exit 139 su Linux, `0xC0000005` su Windows) | Layer GDAL/OGR ancora referenziati quando `exitQgis()` smonta il provider registry. Rilasciarli prima: fai il lavoro in una funzione separata e chiama `gc.collect()` prima di `app.exitQgis()` (vedi `examples/hello_qgis.py`). |
 
