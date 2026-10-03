@@ -42,6 +42,11 @@ La versione QGIS installata è **pinnata in `environment.yml`** (la stessa
 validata dalla CI): ambiente riproducibile, uguale per tutti. Funziona su
 x86_64 **e** ARM (l'architettura è rilevata automaticamente).
 
+> **QGIS LTR e l'etichetta `qgis_ltr`** — conda-forge pubblica la LTR sotto
+> l'etichetta `conda-forge/label/qgis_ltr`, non sul canale principale. Per questo
+> `environment.yml` e gli script di setup elencano l'etichetta **prima** di
+> `conda-forge`: un `update` sul solo `conda-forge` non vede la LTR più recente.
+
 Al termine verifica con:
 
 ```bash
@@ -233,8 +238,8 @@ Scarica QGIS + GDAL + PROJ + GEOS + Qt + Python e risolve le dipendenze
 export MAMBA_ROOT_PREFIX="$HOME/micromamba"
 # riproducibile: versione pinnata in environment.yml (consigliato)
 ~/.local/bin/micromamba create -f environment.yml -y
-# oppure, per l'ultima versione disponibile su conda-forge:
-# ~/.local/bin/micromamba create -n qgis -c conda-forge qgis -y
+# oppure, per l'ultima LTR disponibile su conda-forge (etichetta qgis_ltr):
+# ~/.local/bin/micromamba create -n qgis -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
 # libera la cache di download (recupera ~1.5-2 GB; l'ambiente resta intatto)
 ~/.local/bin/micromamba clean -a -y
 ```
@@ -349,8 +354,8 @@ Esegui con: `QT_QPA_PLATFORM=offscreen micromamba run -n qgis python -u script.p
 # aggiornare QGIS alla versione pinnata più recente: modifica la versione in
 # environment.yml, poi ricrea l'ambiente
 micromamba env remove -n qgis -y && bash setup.sh
-# oppure aggiornamento libero all'ultima di conda-forge
-micromamba update -n qgis -c conda-forge qgis -y
+# oppure aggiornamento libero all'ultima LTR di conda-forge
+micromamba update -n qgis -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
 # liberare la cache
 micromamba clean -a -y
 # spazio occupato

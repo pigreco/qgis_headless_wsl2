@@ -66,15 +66,15 @@ if ($AddToPath) {
 if (Test-Path "$env:MAMBA_ROOT_PREFIX\envs\$ENV_NAME") {
     Say "Environment '$ENV_NAME' already exists: nothing to install."
 } else {
-    Say "Creating '$ENV_NAME' from conda-forge (~3-5 GB, a few minutes) ..."
+    Say "Creating '$ENV_NAME' from conda-forge, qgis_ltr label (~3-5 GB, a few minutes) ..."
     $envFile = Join-Path $PSScriptRoot "environment.yml"
     if ($QgisVersion) {
-        & $MAMBA create -n $ENV_NAME -c conda-forge "qgis=$QgisVersion" -y
+        & $MAMBA create -n $ENV_NAME -c conda-forge/label/qgis_ltr -c conda-forge "qgis=$QgisVersion" -y
     } elseif (Test-Path $envFile) {
         Say "Using environment.yml (pinned QGIS version) ..."
         & $MAMBA create -f $envFile -y
     } else {
-        & $MAMBA create -n $ENV_NAME -c conda-forge qgis -y
+        & $MAMBA create -n $ENV_NAME -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
     }
     Say "Cleaning package cache ..."
     & $MAMBA clean -a -y

@@ -4,6 +4,17 @@ Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 
 ---
 
+## [Non rilasciato]
+
+### Modifiche
+
+- **QGIS LTR dall'etichetta `qgis_ltr`** — `environment.yml`, `setup.sh`,
+  `setup.ps1`, README e skill usano ora `conda-forge/label/qgis_ltr` (prima di
+  `conda-forge`): la LTR più recente è pubblicata lì e non sul canale principale.
+  Versione pinnata aggiornata da 3.44.11 a 3.44.15.
+
+---
+
 ## [1.1.0] — 2026-08-07
 
 Campagna di migliorie significative: CI multi-piattaforma, ambiente riproducibile,

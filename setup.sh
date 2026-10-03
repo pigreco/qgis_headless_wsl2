@@ -57,14 +57,14 @@ fi
 if "$MAMBA" env list 2>/dev/null | grep -qE "/envs/${ENV_NAME}\b|[[:space:]]${ENV_NAME}[[:space:]]"; then
   say "Ambiente '${ENV_NAME}' gia' esistente: nessuna installazione."
 else
-  say "Creo l'ambiente '${ENV_NAME}' da conda-forge (qualche minuto, ~3-5 GB) ..."
+  say "Creo l'ambiente '${ENV_NAME}' da conda-forge, etichetta qgis_ltr (qualche minuto, ~3-5 GB) ..."
   if [[ -n "$QGIS_VERSION" ]]; then
-    "$MAMBA" create -n "$ENV_NAME" -c conda-forge "qgis=${QGIS_VERSION}" -y
+    "$MAMBA" create -n "$ENV_NAME" -c conda-forge/label/qgis_ltr -c conda-forge "qgis=${QGIS_VERSION}" -y
   elif [[ -f "$ENV_FILE" ]]; then
     say "Uso environment.yml (versione QGIS pinnata) ..."
     "$MAMBA" create -f "$ENV_FILE" -y
   else
-    "$MAMBA" create -n "$ENV_NAME" -c conda-forge qgis -y
+    "$MAMBA" create -n "$ENV_NAME" -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
   fi
   say "Pulisco la cache dei pacchetti ..."
   "$MAMBA" clean -a -y
