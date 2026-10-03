@@ -81,9 +81,21 @@ mkdir -p ~/.local/bin \
   | tar -xj -C /tmp bin/micromamba && cp /tmp/bin/micromamba ~/.local/bin/ && chmod +x ~/.local/bin/micromamba
 # create the env, then free the download cache
 export MAMBA_ROOT_PREFIX="$HOME/micromamba"
-~/.local/bin/micromamba create -n qgis -c conda-forge qgis -y
+~/.local/bin/micromamba create -n qgis -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
 ~/.local/bin/micromamba clean -a -y
 ```
+
+The env tracks the **QGIS LTR**, which conda-forge publishes under the
+`qgis_ltr` label (`conda-forge/label/qgis_ltr`), not on the main channel — the
+main channel lags behind or carries a different release. Always pass the label
+**before** `-c conda-forge`, both when creating and when updating:
+
+```bash
+MAMBA_ROOT_PREFIX=$HOME/micromamba ~/.local/bin/micromamba update -n qgis \
+  -c conda-forge/label/qgis_ltr -c conda-forge qgis -y
+```
+
+The label has builds for linux-64, linux-aarch64 and win-64.
 
 **Windows (PowerShell):**
 ```powershell
